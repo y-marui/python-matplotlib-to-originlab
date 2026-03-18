@@ -45,12 +45,14 @@ These are known gaps in the existing `matplotlib-to-originlab-core` implementati
 
 Implement the HTTP client in `remote/matplotlib_to_originlab_remote/__init__.py`:
 
-- [ ] Choose serialisation format for matplotlib Figure
-  - Candidate: pickle + base64 (simple, lossy on cross-version transfers)
-  - Candidate: JSON + array data (portable, requires custom encoder)
-- [ ] Implement `run()` with `httpx` POST to `/run`
-- [ ] Job polling or WebSocket for async results
-- [ ] Authentication / API key support
+- [ ] Extract figure info from matplotlib Figure and serialise to `figure_data` JSON (see `AI_CONTEXT.md` §5 for schema)
+- [ ] `POST /job` — submit job, receive `job_id`
+- [ ] `GET /job/{job_id}` — poll for status (`queued | running | success | failed | timeout | cancelled`)
+- [ ] `GET /result/{job_id}` — download .opju or .pptx result
+- [ ] `POST /job/{job_id}/cancel` — cancel queued or running job
+- [ ] Polling helper: 3s interval, 360s timeout (see `AI_CONTEXT.md` §7)
+- [ ] HTTPS with self-signed cert (`verify=False` or cert path)
+- [ ] Bearer token authentication via env var
 - [ ] `configure()` picks up `MATPLOTLIB_TO_ORIGINLAB_SERVER_URL` env var (stub exists)
 - [ ] Unit tests with `pytest-asyncio` + `respx` (mock server)
 
@@ -58,15 +60,26 @@ Implement the HTTP client in `remote/matplotlib_to_originlab_remote/__init__.py`
 
 ## Phase 4 — Server (`matplotlib-to-originlab-server`)
 
-Implement the FastAPI server in `server/matplotlib_to_originlab_server/app.py`:
+Implement the FastAPI server in `server/matplotlib_to_originlab_server/app.py`.
+Full spec: see `AI_CONTEXT.md`.
 
-- [ ] `GET /health` — return Origin availability and server version
-- [ ] `GET /version` — return package versions
-- [ ] `POST /run` — accept serialised figure, execute via core, return result
-- [ ] Job queue (background tasks) for concurrent requests
+- [ ] SQLite job DB (`jobs` table — see `AI_CONTEXT.md` §8)
+- [ ] Job directory structure: `/jobs/{job_id}/input/`, `output/`, `log.txt`
+- [ ] `POST /job` — accept `figure_data`, return `job_id`, enqueue
+- [ ] `GET /job/{job_id}` — return job status
+- [ ] `GET /result/{job_id}` — return .opju or .pptx as binary
+- [ ] `POST /job/{job_id}/cancel` — cancel queued job or kill running Origin
+- [ ] `GET /queue` — return current queue state (ops use)
+- [ ] Single-threaded FIFO worker (see `AI_CONTEXT.md` §9)
+- [ ] Origin control via win32com with `threading.Lock()` (see `AI_CONTEXT.md` §10–11)
+- [ ] State reset: `doc -s;` between jobs; full restart on failure/timeout
+- [ ] Startup recovery: `running → queued` on server restart
+- [ ] Structured per-job logging to `log.txt` + DB summary
+- [ ] `MAX_RUNTIME = 300` s timeout with watchdog
+- [ ] Bearer token middleware (env var)
+- [ ] HTTPS (self-signed cert) + optional IP allowlist
 - [ ] `--host` / `--port` CLI arguments (via `argparse` or `typer`)
 - [ ] Windows service / auto-start setup instructions
-- [ ] Authentication / API key middleware
 - [ ] Integration tests (client ↔ server in CI, Windows runner)
 
 ---
@@ -99,11 +112,21 @@ matplotlib-to-originlab  (client)
 │  origin_available() == False       │
 │    → matplotlib-to-originlab-remote│
 └────────────────────────────────────┘
-    ↓ (remote path)
-matplotlib-to-originlab-server
+    ↓ (remote path, HTTPS + Bearer token)
+matplotlib-to-originlab-server (FastAPI)
     ↓
-OriginLab
+Job DB (SQLite)  ←→  Job Queue
+    ↓
+Worker (Single Thread)
+    ↓
+Origin (COM / win32com)
+    ↓
+Result Storage (.opju / .pptx)
+    ↓
+client (polling GET /job/{id} → GET /result/{id})
 ```
+
+See `AI_CONTEXT.md` for full technical specification.
 
 ### origin_available() logic
 
