@@ -1,4 +1,4 @@
-from matplotlib_to_origin_core import __version__
+from matplotlib_to_originlab_core import __version__
 
 
 def test_version():

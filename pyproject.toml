@@ -1,10 +1,10 @@
 # Monorepo root — not an installable package.
 # Each sub-package has its own pyproject.toml:
 #
-#   core/    → matplotlib-to-origin-core   (local execution engine, Windows + Origin)
-#   client/  → matplotlib-to-origin        (user-facing client, all platforms)
-#   remote/  → matplotlib-to-origin-remote (HTTP client)
-#   server/  → matplotlib-to-origin-server (Origin execution node, Windows)
+#   core/    → matplotlib-to-originlab-core   (local execution engine, Windows + Origin)
+#   client/  → matplotlib-to-originlab        (user-facing client, all platforms)
+#   remote/  → matplotlib-to-originlab-remote (HTTP client)
+#   server/  → matplotlib-to-originlab-server (Origin execution node, Windows)
 #
 # To work on a specific package:
 #   cd core && poetry install
@@ -12,9 +12,9 @@
 #   etc.
 
 [tool.poetry]
-name = "matplotlib-to-origin-monorepo"
+name = "matplotlib-to-originlab-monorepo"
 version = "0.1.0"
-description = "Monorepo root for the matplotlib-to-origin ecosystem"
+description = "Monorepo root for the matplotlib-to-originlab ecosystem"
 authors = ["y-marui"]
 readme = "README.md"
 license = "MIT"

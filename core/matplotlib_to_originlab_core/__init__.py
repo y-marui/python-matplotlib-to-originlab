@@ -16,9 +16,9 @@ import sys
 
 if sys.platform != "win32":
     raise ImportError(
-        "matplotlib-to-origin-core requires Windows with OriginLab installed. "
-        "On other platforms, use matplotlib-to-origin (client) with mode='remote' "
-        "to forward jobs to a matplotlib-to-origin-server instance."
+        "matplotlib-to-originlab-core requires Windows with OriginLab installed. "
+        "On other platforms, use matplotlib-to-originlab (client) with mode='remote' "
+        "to forward jobs to a matplotlib-to-originlab-server instance."
     )
 
 import os

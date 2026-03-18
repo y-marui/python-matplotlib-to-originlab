@@ -1,4 +1,4 @@
-"""HTTP server for matplotlib-to-origin-server.
+"""HTTP server for matplotlib-to-originlab-server.
 
 Planned stack: FastAPI + uvicorn (Windows, with OriginLab installed).
 
@@ -7,7 +7,7 @@ NOTE: This module is a stub.  Full implementation is planned — see ROADMAP.md.
 Planned endpoints
 -----------------
 POST /run
-    Accept a serialised matplotlib figure, execute via matplotlib-to-origin-core,
+    Accept a serialised matplotlib figure, execute via matplotlib-to-originlab-core,
     and return the result (e.g. saved Origin project path).
 
 GET /health
@@ -23,9 +23,9 @@ from __future__ import annotations
 # Example skeleton (requires: pip install fastapi uvicorn):
 #
 # from fastapi import FastAPI
-# from matplotlib_to_origin_core import matplotlib_to_origin
+# from matplotlib_to_originlab_core import matplotlib_to_origin
 #
-# app = FastAPI(title="matplotlib-to-origin-server")
+# app = FastAPI(title="matplotlib-to-originlab-server")
 #
 # @app.get("/health")
 # def health():
@@ -34,7 +34,7 @@ from __future__ import annotations
 # @app.post("/run")
 # def run_job(payload: dict):
 #     # 1. Deserialise the figure from payload
-#     # 2. Call matplotlib_to_origin(fig, ax, ...)
+#     # 2. Call matplotlib_to_originlab(fig, ax, ...)
 #     # 3. Return result
 #     raise NotImplementedError
 #
@@ -46,7 +46,7 @@ from __future__ import annotations
 
 def main() -> None:
     raise NotImplementedError(
-        "matplotlib-to-origin-server is not yet implemented. "
+        "matplotlib-to-originlab-server is not yet implemented. "
         "See ROADMAP.md for the planned implementation."
     )
 

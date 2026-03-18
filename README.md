@@ -1,4 +1,4 @@
-# matplotlib-to-origin
+# Matplotlib to Originlab
 
 Convert matplotlib figures to OriginLab graphs — automatically choosing local
 or remote execution depending on whether OriginLab is available.
@@ -8,11 +8,11 @@ or remote execution depending on whether OriginLab is available.
 ## Monorepo structure
 
 ```
-matplotlib-to-origin/
-├── core/      matplotlib-to-origin-core    Local execution engine (Windows + Origin)
-├── client/    matplotlib-to-origin         User-facing client (all platforms)
-├── remote/    matplotlib-to-origin-remote  HTTP client for server mode
-└── server/    matplotlib-to-origin-server  Origin execution node
+matplotlib-to-originlab/
+├── core/      matplotlib-to-originlab-core    Local execution engine (Windows + Origin)
+├── client/    matplotlib-to-originlab         User-facing client (all platforms)
+├── remote/    matplotlib-to-originlab-remote  HTTP client for server mode
+└── server/    matplotlib-to-originlab-server  Origin execution node
 ```
 
 See each subdirectory for its own README and `pyproject.toml`.
@@ -24,14 +24,14 @@ See each subdirectory for its own README and `pyproject.toml`.
 Install the client (the only package most users need):
 
 ```bash
-pip install matplotlib-to-origin
+pip install matplotlib-to-originlab
 ```
 
 Then:
 
 ```python
 import matplotlib.pyplot as plt
-import matplotlib_to_origin as mto
+import matplotlib_to_originlab as mto
 
 fig, ax = plt.subplots()
 ax.plot([1, 2, 3], [4, 5, 6], label="sample")
@@ -43,8 +43,8 @@ mto.run(fig, ax)  # auto: local if Origin available, else remote
 ```
 
 On a **Windows machine with OriginLab installed**, this uses Origin directly.
-On **any other machine**, it forwards the job to a `matplotlib-to-origin-server`
-instance (configure the server URL with `matplotlib_to_origin_remote.configure()`).
+On **any other machine**, it forwards the job to a `matplotlib-to-originlab-server`
+instance (configure the server URL with `matplotlib_to_originlab_remote.configure()`).
 
 ---
 
@@ -52,7 +52,7 @@ instance (configure the server URL with `matplotlib_to_origin_remote.configure()
 
 ```python
 import matplotlib.pyplot as plt
-import matplotlib_to_origin as mto
+import matplotlib_to_originlab as mto
 from astropy_extension.visualization import labeled_quantity_support
 import astropy.units as u
 import numpy as np
@@ -93,17 +93,17 @@ graph in origin
 ```
 [User Code]
     ↓
-matplotlib-to-origin  (client)
+matplotlib-to-originlab  (client)
     ↓
 ┌──────────────────────────────────────┐
 │  origin_available() == True          │
-│    → matplotlib-to-origin-core       │  (local, Windows + OriginLab)
+│    → matplotlib-to-originlab-core    │  (local, Windows + OriginLab)
 │                                      │
 │  origin_available() == False         │
-│    → matplotlib-to-origin-remote     │  (HTTP client)
+│    → matplotlib-to-originlab-remote  │  (HTTP client)
 └──────────────────────────────────────┘
     ↓ (remote path only)
-matplotlib-to-origin-server
+matplotlib-to-originlab-server
     ↓
 OriginLab
 ```
@@ -112,12 +112,12 @@ OriginLab
 
 ## Packages
 
-| Package                        | Role                                  | Install via PyPI |
-|--------------------------------|---------------------------------------|-----------------|
-| **matplotlib-to-origin**       | User client — start here              | Planned          |
-| matplotlib-to-origin-core      | Local execution engine (Windows only) | No (path ref)    |
-| matplotlib-to-origin-remote    | HTTP client for server mode           | Planned          |
-| matplotlib-to-origin-server    | Origin execution node (Windows only)  | Planned          |
+| Package                           | Role                                  | Install via PyPI |
+|-----------------------------------|---------------------------------------|-----------------|
+| **matplotlib-to-originlab**       | User client — start here              | Planned          |
+| matplotlib-to-originlab-core      | Local execution engine (Windows only) | No (path ref)    |
+| matplotlib-to-originlab-remote    | HTTP client for server mode           | Planned          |
+| matplotlib-to-originlab-server    | Origin execution node (Windows only)  | Planned          |
 
 ---
 

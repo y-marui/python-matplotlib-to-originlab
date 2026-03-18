@@ -1,4 +1,4 @@
-# matplotlib-to-origin — Roadmap
+# Matplotlib to Originlab — Roadmap
 
 This document tracks planned work across the monorepo.
 
@@ -6,21 +6,21 @@ This document tracks planned work across the monorepo.
 
 ## Package status
 
-| Package                        | Status       | PyPI |
-|--------------------------------|--------------|------|
-| matplotlib-to-origin-core      | Functional   | No (local path only) |
-| matplotlib-to-origin           | Functional   | Planned |
-| matplotlib-to-origin-remote    | Stub         | Planned |
-| matplotlib-to-origin-server    | Stub         | Planned |
+| Package                           | Status       | PyPI |
+|-----------------------------------|--------------|------|
+| matplotlib-to-originlab-core      | Functional   | No (local path only) |
+| matplotlib-to-originlab           | Functional   | Planned |
+| matplotlib-to-originlab-remote    | Stub         | Planned |
+| matplotlib-to-originlab-server    | Stub         | Planned |
 
 ---
 
 ## Phase 1 — Package structure (current)
 
-- [x] Move `py2origin` → `core/matplotlib_to_origin_core`
-- [x] Create `client/matplotlib_to_origin` facade with `origin_available()` routing
-- [x] Create stub `remote/matplotlib_to_origin_remote`
-- [x] Create stub `server/matplotlib_to_origin_server`
+- [x] Move `py2origin` → `core/matplotlib_to_originlab_core`
+- [x] Create `client/matplotlib_to_originlab` facade with `origin_available()` routing
+- [x] Create stub `remote/matplotlib_to_originlab_remote`
+- [x] Create stub `server/matplotlib_to_originlab_server`
 - [x] Per-package `pyproject.toml` files
 - [x] `ROADMAP.md` (this file)
 
@@ -28,7 +28,7 @@ This document tracks planned work across the monorepo.
 
 ## Phase 2 — Core improvements
 
-These are known gaps in the existing `matplotlib-to-origin-core` implementation:
+These are known gaps in the existing `matplotlib-to-originlab-core` implementation:
 
 - [ ] Font size of x / y axis labels (`layer.x.label.pt`, `xb.fsize`)
 - [ ] Font size of legend
@@ -41,9 +41,9 @@ These are known gaps in the existing `matplotlib-to-origin-core` implementation:
 
 ---
 
-## Phase 3 — Remote transport (`matplotlib-to-origin-remote`)
+## Phase 3 — Remote transport (`matplotlib-to-originlab-remote`)
 
-Implement the HTTP client in `remote/matplotlib_to_origin_remote/__init__.py`:
+Implement the HTTP client in `remote/matplotlib_to_originlab_remote/__init__.py`:
 
 - [ ] Choose serialisation format for matplotlib Figure
   - Candidate: pickle + base64 (simple, lossy on cross-version transfers)
@@ -51,14 +51,14 @@ Implement the HTTP client in `remote/matplotlib_to_origin_remote/__init__.py`:
 - [ ] Implement `run()` with `httpx` POST to `/run`
 - [ ] Job polling or WebSocket for async results
 - [ ] Authentication / API key support
-- [ ] `configure()` picks up `MATPLOTLIB_TO_ORIGIN_SERVER_URL` env var (stub exists)
+- [ ] `configure()` picks up `MATPLOTLIB_TO_ORIGINLAB_SERVER_URL` env var (stub exists)
 - [ ] Unit tests with `pytest-asyncio` + `respx` (mock server)
 
 ---
 
-## Phase 4 — Server (`matplotlib-to-origin-server`)
+## Phase 4 — Server (`matplotlib-to-originlab-server`)
 
-Implement the FastAPI server in `server/matplotlib_to_origin_server/app.py`:
+Implement the FastAPI server in `server/matplotlib_to_originlab_server/app.py`:
 
 - [ ] `GET /health` — return Origin availability and server version
 - [ ] `GET /version` — return package versions
@@ -73,10 +73,10 @@ Implement the FastAPI server in `server/matplotlib_to_origin_server/app.py`:
 
 ## Phase 5 — Distribution
 
-- [ ] Publish `matplotlib-to-origin` to PyPI
-- [ ] Publish `matplotlib-to-origin-remote` to PyPI (bundled with client)
-- [ ] Publish `matplotlib-to-origin-server` to PyPI
-- [ ] `matplotlib-to-origin-core` stays local (not on PyPI)
+- [ ] Publish `matplotlib-to-originlab` to PyPI
+- [ ] Publish `matplotlib-to-originlab-remote` to PyPI (bundled with client)
+- [ ] Publish `matplotlib-to-originlab-server` to PyPI
+- [ ] `matplotlib-to-originlab-core` stays local (not on PyPI)
 - [ ] GitHub Actions CI:
   - Lint / type check (all packages)
   - Tests on Linux (client + remote stubs)
@@ -90,17 +90,17 @@ Implement the FastAPI server in `server/matplotlib_to_origin_server/app.py`:
 ```
 [User Code]
     ↓
-matplotlib-to-origin  (client)
+matplotlib-to-originlab  (client)
     ↓
 ┌────────────────────────────────────┐
 │  origin_available() == True        │
-│    → matplotlib-to-origin-core     │
+│    → matplotlib-to-originlab-core  │
 │                                    │
 │  origin_available() == False       │
-│    → matplotlib-to-origin-remote   │
+│    → matplotlib-to-originlab-remote│
 └────────────────────────────────────┘
     ↓ (remote path)
-matplotlib-to-origin-server
+matplotlib-to-originlab-server
     ↓
 OriginLab
 ```
@@ -133,14 +133,14 @@ Result is cached for the process lifetime to avoid repeatedly launching Origin.
 ## Dependency graph
 
 ```
-matplotlib-to-origin (client)
-├── matplotlib-to-origin-core   [Windows only, path reference]
-└── matplotlib-to-origin-remote
+matplotlib-to-originlab (client)
+├── matplotlib-to-originlab-core   [Windows only, path reference]
+└── matplotlib-to-originlab-remote
 
-matplotlib-to-origin-remote
+matplotlib-to-originlab-remote
 └── httpx
 
-matplotlib-to-origin-server
-└── matplotlib-to-origin-core   [Windows only, path reference]
+matplotlib-to-originlab-server
+└── matplotlib-to-originlab-core   [Windows only, path reference]
    (+ fastapi, uvicorn — optional)
 ```

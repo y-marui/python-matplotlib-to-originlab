@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "matplotlib-to-origin-core"
+name = "matplotlib-to-originlab-core"
 version = "0.1.2"
-description = "Core execution engine for matplotlib-to-origin (Windows + OriginLab only, not published to PyPI)"
+description = "Core execution engine for matplotlib-to-originlab (Windows + OriginLab only, not published to PyPI)"
 authors = ["y-marui"]
 readme = "README.md"
 license = "MIT"
-packages = [{include = "matplotlib_to_origin_core"}]
+packages = [{include = "matplotlib_to_originlab_core"}]
 
 # NOTE: This package is NOT intended to be published to PyPI.
-# It is referenced locally by matplotlib-to-origin and matplotlib-to-origin-server
+# It is referenced locally by matplotlib-to-originlab and matplotlib-to-originlab-server
 # using path dependencies in their pyproject.toml files.
 # Windows + OriginLab installation required.
 
