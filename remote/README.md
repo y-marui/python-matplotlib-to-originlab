@@ -1,10 +1,10 @@
-# matplotlib-to-origin-remote
+# matplotlib-to-originlab-remote
 
 HTTP client for forwarding matplotlib figures to a
-[matplotlib-to-origin-server](../server/) instance.
+[matplotlib-to-originlab-server](../server/) instance.
 
 This package is used internally by
-[matplotlib-to-origin](../client/) when `origin_available()` returns `False`.
+[matplotlib-to-originlab](../client/) when `origin_available()` returns `False`.
 You do not need to install it directly.
 
 > **Status:** Stub — implementation planned. See [ROADMAP.md](../ROADMAP.md).
@@ -12,7 +12,7 @@ You do not need to install it directly.
 ## Usage (via client)
 
 ```python
-import matplotlib_to_origin as mto
+import matplotlib_to_originlab as mto
 
 # Remote mode is selected automatically when Origin is not available,
 # or can be forced explicitly:
@@ -22,7 +22,7 @@ mto.run(fig, ax, mode="remote")
 ## Direct configuration
 
 ```python
-from matplotlib_to_origin_remote import configure
+from matplotlib_to_originlab_remote import configure
 
 configure("http://my-origin-server:8719")
 ```

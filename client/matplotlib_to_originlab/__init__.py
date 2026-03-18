@@ -1,8 +1,8 @@
-"""matplotlib-to-origin — unified client for converting matplotlib figures to OriginLab.
+"""matplotlib-to-originlab — unified client for converting matplotlib figures to OriginLab.
 
 Usage
 -----
-import matplotlib_to_origin as mto
+import matplotlib_to_originlab as mto
 
 mto.run(fig, ax)                     # auto mode (default)
 mto.run(fig, ax, mode="local")       # force local Origin execution
@@ -11,14 +11,14 @@ mto.run(fig, ax, mode="remote")      # force remote server execution
 Execution strategy
 ------------------
 mode="auto"  (default):
-    origin_available() == True  → local via matplotlib-to-origin-core
-    origin_available() == False → remote via matplotlib-to-origin-remote
+    origin_available() == True  → local via matplotlib-to-originlab-core
+    origin_available() == False → remote via matplotlib-to-originlab-remote
 
 mode="local":
     Always use local Origin (fails if Origin is not available)
 
 mode="remote":
-    Always send to matplotlib-to-origin-server
+    Always send to matplotlib-to-originlab-server
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from functools import lru_cache
 
 __version__ = "0.1.0"
 
-__all__ = ["run", "matplotlib_to_origin", "origin_available"]
+__all__ = ["run", "matplotlib_to_originlab", "origin_available"]
 
 
 @lru_cache(maxsize=1)
@@ -58,11 +58,11 @@ def run(fig, ax, *args, mode: str = "auto", **kwargs):
         Execution strategy.
         - "auto"   : use local if Origin is available, else remote.
         - "local"  : force local execution (requires OriginLab on Windows).
-        - "remote" : forward to matplotlib-to-origin-server.
+        - "remote" : forward to matplotlib-to-originlab-server.
     **kwargs:
         Forwarded to the underlying execution backend.
-        See matplotlib_to_origin_core.matplotlib_to_origin for local options.
-        See matplotlib_to_origin_remote.run for remote options.
+        See matplotlib_to_originlab_core.matplotlib_to_originlab for local options.
+        See matplotlib_to_originlab_remote.run for remote options.
     """
     if mode == "auto":
         use_local = origin_available()
@@ -76,12 +76,12 @@ def run(fig, ax, *args, mode: str = "auto", **kwargs):
         )
 
     if use_local:
-        from matplotlib_to_origin_core import matplotlib_to_origin as _local
+        from matplotlib_to_originlab_core import matplotlib_to_originlab as _local
         return _local(fig, ax, *args, **kwargs)
     else:
-        from matplotlib_to_origin_remote import run as _remote
+        from matplotlib_to_originlab_remote import run as _remote
         return _remote(fig, ax, *args, **kwargs)
 
 
 # Convenience alias for users who prefer the long-form name
-matplotlib_to_origin = run
+matplotlib_to_originlab = run

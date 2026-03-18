@@ -1,20 +1,20 @@
 [tool.poetry]
-name = "matplotlib-to-origin-server"
+name = "matplotlib-to-originlab-server"
 version = "0.1.0"
-description = "Origin execution node — receives plot jobs from matplotlib-to-origin clients"
+description = "Origin execution node — receives plot jobs from matplotlib-to-originlab clients"
 authors = ["y-marui"]
 readme = "README.md"
 license = "MIT"
-packages = [{include = "matplotlib_to_origin_server"}]
+packages = [{include = "matplotlib_to_originlab_server"}]
 
 # Install on the machine that has OriginLab:
-#   pip install matplotlib-to-origin-server
+#   pip install matplotlib-to-originlab-server
 #
 # Windows + OriginLab required.
 
 [tool.poetry.dependencies]
 python = "^3.10"
-matplotlib-to-origin-core = {path = "../core"}
+matplotlib-to-originlab-core = {path = "../core"}
 # Web framework (planned — see ROADMAP.md)
 fastapi = {version = "^0.100.0", optional = true}
 uvicorn = {version = "^0.23.0", optional = true}
@@ -23,7 +23,7 @@ uvicorn = {version = "^0.23.0", optional = true}
 server = ["fastapi", "uvicorn"]
 
 [tool.poetry.scripts]
-matplotlib-to-origin-server = "matplotlib_to_origin_server.app:main"
+matplotlib-to-originlab-server = "matplotlib_to_originlab_server.app:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"

@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "matplotlib-to-origin-remote"
+name = "matplotlib-to-originlab-remote"
 version = "0.1.0"
-description = "HTTP client for matplotlib-to-origin-server — cross-platform"
+description = "HTTP client for matplotlib-to-originlab-server — cross-platform"
 authors = ["y-marui"]
 readme = "README.md"
 license = "MIT"
-packages = [{include = "matplotlib_to_origin_remote"}]
+packages = [{include = "matplotlib_to_originlab_remote"}]
 
 # All OS (Windows, macOS, Linux).
-# Used by matplotlib-to-origin when OriginLab is not available locally.
+# Used by matplotlib-to-originlab when OriginLab is not available locally.
 
 [tool.poetry.dependencies]
 python = "^3.10"

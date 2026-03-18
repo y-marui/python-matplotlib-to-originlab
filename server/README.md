@@ -1,10 +1,10 @@
-# matplotlib-to-origin-server
+# matplotlib-to-originlab-server
 
-Origin execution node for the matplotlib-to-origin ecosystem.
+Origin execution node for the Matplotlib to Originlab ecosystem.
 
 Install this on the machine that has OriginLab.  It accepts plot jobs from
-[matplotlib-to-origin](../client/) clients running on any OS and executes
-them locally using [matplotlib-to-origin-core](../core/).
+[matplotlib-to-originlab](../client/) clients running on any OS and executes
+them locally using [matplotlib-to-originlab-core](../core/).
 
 > **Status:** Stub — implementation planned. See [ROADMAP.md](../ROADMAP.md).
 
@@ -16,26 +16,26 @@ them locally using [matplotlib-to-origin-core](../core/).
 ## Installation
 
 ```bash
-pip install matplotlib-to-origin-server
+pip install matplotlib-to-originlab-server
 ```
 
 ## Starting the server
 
 ```bash
-matplotlib-to-origin-server --host 0.0.0.0 --port 8719
+matplotlib-to-originlab-server --host 0.0.0.0 --port 8719
 # or
-python -m matplotlib_to_origin_server
+python -m matplotlib_to_originlab_server
 ```
 
 ## Client configuration
 
-On the client machine, point matplotlib-to-origin at this server:
+On the client machine, point matplotlib-to-originlab at this server:
 
 ```python
-from matplotlib_to_origin_remote import configure
+from matplotlib_to_originlab_remote import configure
 configure("http://<server-ip>:8719")
 
-import matplotlib_to_origin as mto
+import matplotlib_to_originlab as mto
 mto.run(fig, ax, mode="remote")
 ```
 

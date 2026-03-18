@@ -1,10 +1,10 @@
-# matplotlib-to-origin-core
+# matplotlib-to-originlab-core
 
-Core execution engine for the matplotlib-to-origin ecosystem.
+Core execution engine for the Matplotlib to Originlab ecosystem.
 
 **Not published to PyPI.** This package is referenced as a local path dependency by:
-- `matplotlib-to-origin` (client)
-- `matplotlib-to-origin-server`
+- `matplotlib-to-originlab` (client)
+- `matplotlib-to-originlab-server`
 
 ## Requirements
 
@@ -15,11 +15,11 @@ Core execution engine for the matplotlib-to-origin ecosystem.
 ## Usage
 
 This package is not meant to be imported directly by end users.
-Use [`matplotlib-to-origin`](../client/) instead.
+Use [`matplotlib-to-originlab`](../client/) instead.
 
 ```python
 # Internal usage (via client)
-from matplotlib_to_origin_core import matplotlib_to_origin, numpy_to_origin
+from matplotlib_to_originlab_core import matplotlib_to_origin, numpy_to_origin
 ```
 
 ## API
