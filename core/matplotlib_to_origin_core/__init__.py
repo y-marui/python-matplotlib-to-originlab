@@ -12,10 +12,19 @@ https://www.originlab.com/doc/LabTalk/ref/
     e.g. changing axis scales, font sizes, etc.
 """
 
+import sys
+
+if sys.platform != "win32":
+    raise ImportError(
+        "matplotlib-to-origin-core requires Windows with OriginLab installed. "
+        "On other platforms, use matplotlib-to-origin (client) with mode='remote' "
+        "to forward jobs to a matplotlib-to-origin-server instance."
+    )
+
 import os
 import re
 import time
-import warningszw
+import warnings
 
 import matplotlib
 import matplotlib.colors as colors

@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "matplotlib-to-origin-core"
+version = "0.1.2"
+description = "Core execution engine for matplotlib-to-origin (Windows + OriginLab only, not published to PyPI)"
+authors = ["y-marui"]
+readme = "README.md"
+license = "MIT"
+packages = [{include = "matplotlib_to_origin_core"}]
+
+# NOTE: This package is NOT intended to be published to PyPI.
+# It is referenced locally by matplotlib-to-origin and matplotlib-to-origin-server
+# using path dependencies in their pyproject.toml files.
+# Windows + OriginLab installation required.
+
+[tool.poetry.dependencies]
+python = "^3.10"
+matplotlib = "^3.6.3"
+originext = {version = "^1.2.0", markers = "sys_platform == 'win32'"}
+originpro = {version = "^1.1.4", markers = "sys_platform == 'win32'"}
+pywin32 = {version = "*", markers = "sys_platform == 'win32'"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.1"
+autopep8 = "^2.0.1"
+ipykernel = "^6.20.2"
+astropy = "^5.2.1"
+astropy-extension = {git = "https://github.com/y-marui/astropy-extension"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
