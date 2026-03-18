@@ -15,7 +15,7 @@ https://www.originlab.com/doc/LabTalk/ref/
 import os
 import re
 import time
-import warningszw
+import warnings
 
 import matplotlib
 import matplotlib.colors as colors

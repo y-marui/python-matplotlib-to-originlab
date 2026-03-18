@@ -1,23 +1,32 @@
+# Monorepo root — not an installable package.
+# Each sub-package has its own pyproject.toml:
+#
+#   core/    → matplotlib-to-origin-core   (local execution engine, Windows + Origin)
+#   client/  → matplotlib-to-origin        (user-facing client, all platforms)
+#   remote/  → matplotlib-to-origin-remote (HTTP client)
+#   server/  → matplotlib-to-origin-server (Origin execution node, Windows)
+#
+# To work on a specific package:
+#   cd core && poetry install
+#   cd client && poetry install
+#   etc.
+
 [tool.poetry]
-name = "py2origin"
-version = "0.1.2"
-description = ""
-authors = ["Your Name <you@example.com>"]
+name = "matplotlib-to-origin-monorepo"
+version = "0.1.0"
+description = "Monorepo root for the matplotlib-to-origin ecosystem"
+authors = ["y-marui"]
 readme = "README.md"
+license = "MIT"
+# No packages field — this is not an installable package itself.
 
 [tool.poetry.dependencies]
-python = "^3.11"
-matplotlib = "^3.6.3"
-originext = "^1.2.0"
-originpro = "^1.1.4"
-
+python = "^3.10"
 
 [tool.poetry.group.dev.dependencies]
-ipykernel = "^6.20.2"
 pytest = "^7.2.1"
 autopep8 = "^2.0.1"
-astropy = "^5.2.1"
-astropy-extension = {git = "https://github.com/y-marui/astropy-extension"}
+ipykernel = "^6.20.2"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "matplotlib-to-origin"
+version = "0.1.0"
+description = "Convert matplotlib figures to OriginLab graphs — unified client"
+authors = ["y-marui"]
+readme = "README.md"
+license = "MIT"
+packages = [{include = "matplotlib_to_origin"}]
+
+# Install for all users:
+#   pip install matplotlib-to-origin
+#
+# On Windows with OriginLab installed, Origin will be used directly (local mode).
+# On other platforms (or Windows without Origin), jobs are forwarded to a
+# matplotlib-to-origin-server instance (remote mode).
+
+[tool.poetry.dependencies]
+python = "^3.10"
+matplotlib = "^3.6.3"
+matplotlib-to-origin-remote = {path = "../remote"}
+# Core is only installed on Windows; on other platforms the remote backend is used.
+matplotlib-to-origin-core = {path = "../core", markers = "sys_platform == 'win32'"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
