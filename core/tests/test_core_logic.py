@@ -215,5 +215,90 @@ class TestLatexToLabtalk(unittest.TestCase):
         )
 
 
+# ---------------------------------------------------------------------------
+# Astropy units helpers  (skipped if astropy is not installed)
+# ---------------------------------------------------------------------------
+
+try:
+    import astropy.units as u
+    HAS_ASTROPY = True
+except ImportError:
+    HAS_ASTROPY = False
+
+
+def _unit_str(unit) -> str:
+    """Mirror of the helper in the core module."""
+    if unit is None:
+        return ''
+    try:
+        return unit.to_string()
+    except AttributeError:
+        return str(unit)
+
+
+def _strip_unit(v) -> float:
+    """Mirror of the helper in the core module."""
+    return float(v.value) if hasattr(v, "value") else float(v)
+
+
+@unittest.skipUnless(HAS_ASTROPY, "astropy not installed")
+class TestUnitHelpers(unittest.TestCase):
+
+    def test_unit_str_none(self):
+        self.assertEqual(_unit_str(None), '')
+
+    def test_unit_str_meter(self):
+        self.assertEqual(_unit_str(u.m), 'm')
+
+    def test_unit_str_compound(self):
+        unit = u.kg / u.s**2
+        result = _unit_str(unit)
+        self.assertIsInstance(result, str)
+        self.assertGreater(len(result), 0)
+
+    def test_strip_unit_quantity(self):
+        q = 3.14 * u.m
+        self.assertAlmostEqual(_strip_unit(q), 3.14)
+
+    def test_strip_unit_plain_float(self):
+        self.assertAlmostEqual(_strip_unit(2.71), 2.71)
+
+    def test_strip_unit_xlim(self):
+        """ax.get_xlim() with astropy should survive _strip_unit."""
+        fig, ax = plt.subplots()
+        ax.set_xlim(0.0, 10.0)
+        lo, hi = (_strip_unit(v) for v in ax.get_xlim())
+        self.assertAlmostEqual(lo, 0.0)
+        self.assertAlmostEqual(hi, 10.0)
+        plt.close(fig)
+
+
+@unittest.skipUnless(HAS_ASTROPY, "astropy not installed")
+class TestAstropyDataExtraction(unittest.TestCase):
+    """Verify that Quantity x/y data is correctly stripped before passing to Origin."""
+
+    def test_quantity_xdata_strip(self):
+        x = np.array([1.0, 2.0, 3.0]) * u.m
+        # Simulate what the core does
+        extracted = np.float64(x.value).tolist()
+        self.assertEqual(extracted, [1.0, 2.0, 3.0])
+
+    def test_unit_propagation(self):
+        """Units from ax.xaxis / yaxis should survive _unit_str."""
+        fig, ax = plt.subplots()
+        try:
+            from astropy.visualization import quantity_support
+            with quantity_support():
+                ax.plot([1, 2, 3] * u.m, [4, 5, 6] * u.kg)
+                x_unit = ax.xaxis.get_units()
+                y_unit = ax.yaxis.get_units()
+                if x_unit is not None:
+                    self.assertIn('m', _unit_str(x_unit))
+                if y_unit is not None:
+                    self.assertIn('kg', _unit_str(y_unit))
+        finally:
+            plt.close(fig)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -37,6 +37,27 @@ from matplotlib.axes import ErrorbarContainer, BarContainer
 
 __version__ = "0.1.2"
 
+
+# ---------------------------------------------------------------------------
+# Astropy units helpers
+# ---------------------------------------------------------------------------
+
+def _unit_str(unit) -> str:
+    """Return a display string for an axis unit (astropy or other), or ''."""
+    if unit is None:
+        return ''
+    try:
+        # astropy units expose .to_string(); fall back to str() for others
+        return unit.to_string()
+    except AttributeError:
+        return str(unit)
+
+
+def _strip_unit(v) -> float:
+    """Return the numeric value of *v*, stripping any astropy unit wrapper."""
+    return float(v.value) if hasattr(v, "value") else float(v)
+
+
 # Ideas for improvements:
 # - Compile line data (labels, format, color) into df
 #   then use df to sort and group lines in origin
@@ -281,18 +302,20 @@ def matplotlib_to_origin(
             continue
 
         # Add data to sheet
+        x_unit = _unit_str(ax.xaxis.get_units())
+        y_unit = _unit_str(ax.yaxis.get_units())
         wks.from_list(
             x_col_idx,
             np.float64(xdata).tolist(),
             'X',
-            units='Unit',
+            units=x_unit,
             comments='',
             axis='X')
         wks.from_list(
             y_col_idx,
             np.float64(ydata).tolist(),
             'Y',
-            units='Unit',
+            units=y_unit,
             comments=label,
             axis='Y')
         if yerrdata is not None:
@@ -300,7 +323,7 @@ def matplotlib_to_origin(
                 yerr_col_idx,
                 np.float64(yerrdata).tolist(),
                 'Yerr',
-                units='Unit',
+                units=y_unit,
                 comments='',
                 axis='E')
         if xerrdata is not None:
@@ -308,7 +331,7 @@ def matplotlib_to_origin(
                 xerr_col_idx,
                 np.float64(xerrdata).tolist(),
                 'Xerr',
-                units='Unit',
+                units=x_unit,
                 comments='',
                 axis='xEr')
 
@@ -418,7 +441,7 @@ def matplotlib_to_origin(
             x_col_idx,
             xdata.tolist(),
             'X',
-            units='Unit',
+            units=_unit_str(ax.xaxis.get_units()),
             comments='',
             axis='X')
 
@@ -433,7 +456,7 @@ def matplotlib_to_origin(
                 y_col_idx + i,
                 np.float64(ydata).tolist(),
                 'Y',
-                units='Unit',
+                units=_unit_str(ax.yaxis.get_units()),
                 comments=label,
                 axis='Y')
 
@@ -458,9 +481,9 @@ def matplotlib_to_origin(
     # https://matplotlib.org/api/axes_api.html
     # Get figure dimensions
     # Set figure dimensions
-    # Get axes ranges
-    x_axis_range = ax.get_xlim()
-    y_axis_range = ax.get_ylim()
+    # Get axes ranges (convert Quantity to float for robustness with astropy)
+    x_axis_range = tuple(_strip_unit(v) for v in ax.get_xlim())
+    y_axis_range = tuple(_strip_unit(v) for v in ax.get_ylim())
     # Get axes scale types
     x_axis_scale = ax.get_xscale()
     y_axis_scale = ax.get_yscale()
