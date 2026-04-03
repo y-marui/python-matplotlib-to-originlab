@@ -22,13 +22,13 @@ repos:
       - id: python-use-type-annotations
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+    rev: 5.13.2
     hooks:
       - id: isort
         name: isort (python)
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.32.0
+    rev: v3.19.1
     hooks:
       - id: pyupgrade
 
@@ -41,8 +41,3 @@ repos:
   #   rev: 6.1.1
   #   hooks:
   #     - id: pydocstyle
-
-  - repo: https://github.com/y-marui/poetry-tools
-    rev: 1.2.1
-    hooks:
-      - id: check-poetry-git-flow

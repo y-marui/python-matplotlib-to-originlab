@@ -185,9 +185,9 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
 
     with _origin_lock:
         # Reset Origin state between jobs so leftover workbooks / graphs from
-        # the previous job do not pollute this one.  `doc -s` closes all child
-        # windows and clears the workspace without quitting Origin itself.
-        op.lt_exec("doc -s;")
+        # the previous job do not pollute this one.  `doc -n` creates a new
+        # project, clearing all workbooks/graphs without quitting Origin.
+        op.lt_exec("doc -n;")
         matplotlib_to_origin(
             fig,
             ax,
