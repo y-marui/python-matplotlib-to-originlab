@@ -33,7 +33,7 @@ import numpy as np
 import OriginExt
 import originpro as op
 import win32com.client
-from matplotlib.axes import ErrorbarContainer, BarContainer
+from matplotlib.container import BarContainer, ErrorbarContainer
 
 __version__ = "0.1.2"
 
