@@ -177,6 +177,10 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
     result_stem = str(output_dir / "result")
 
     with _origin_lock:
+        # Reset Origin state between jobs so leftover workbooks / graphs from
+        # the previous job do not pollute this one.  `doc -s` closes all child
+        # windows and clears the workspace without quitting Origin itself.
+        op.lt_exec("doc -s;")
         matplotlib_to_origin(
             fig, ax,
             folder_name=figure_data.get("folder_name"),

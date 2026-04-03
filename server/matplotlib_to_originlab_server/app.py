@@ -18,6 +18,7 @@ Start the server
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import uuid
@@ -43,6 +44,21 @@ from . import db, worker
 JOBS_DIR: Path = worker.JOBS_DIR
 BEARER_TOKEN: str | None = os.environ.get("MATPLOTLIB_TO_ORIGINLAB_TOKEN")
 
+# Comma-separated list of allowed client IPs / CIDR networks.
+# Example: "127.0.0.1,192.168.1.0/24"
+# Leave unset (or empty) to allow all clients.
+_raw_allow = os.environ.get("MATPLOTLIB_TO_ORIGINLAB_ALLOW_IPS", "").strip()
+ALLOW_NETWORKS: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
+if _raw_allow:
+    for _entry in _raw_allow.split(","):
+        _entry = _entry.strip()
+        if _entry:
+            try:
+                ALLOW_NETWORKS.append(ipaddress.ip_network(_entry, strict=False))
+            except ValueError:
+                # Try treating it as a bare host address
+                ALLOW_NETWORKS.append(ipaddress.ip_network(_entry + "/32", strict=False))
+
 # ---------------------------------------------------------------------------
 # Application
 # ---------------------------------------------------------------------------
@@ -58,8 +74,25 @@ class _BearerTokenMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class _IPAllowlistMiddleware(BaseHTTPMiddleware):
+    """Reject requests from IPs not in ALLOW_NETWORKS."""
+
+    async def dispatch(self, request: Request, call_next):
+        client_ip_str = request.client.host if request.client else ""
+        try:
+            client_addr = ipaddress.ip_address(client_ip_str)
+        except ValueError:
+            return JSONResponse({"detail": "Forbidden"}, status_code=403)
+        if not any(client_addr in net for net in ALLOW_NETWORKS):
+            return JSONResponse({"detail": "Forbidden"}, status_code=403)
+        return await call_next(request)
+
+
 if BEARER_TOKEN:
     app.add_middleware(_BearerTokenMiddleware)
+
+if ALLOW_NETWORKS:
+    app.add_middleware(_IPAllowlistMiddleware)
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +204,11 @@ async def get_queue():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "auth": "bearer" if BEARER_TOKEN else "none",
+        "ip_allowlist": bool(ALLOW_NETWORKS),
+    }
 
 
 @app.get("/version")
@@ -207,7 +244,21 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8719, help="Bind port (default: 8719)")
     parser.add_argument("--ssl-certfile", default=None, help="Path to SSL certificate file")
     parser.add_argument("--ssl-keyfile", default=None, help="Path to SSL private key file")
+    parser.add_argument(
+        "--allow-ips",
+        default=None,
+        help=(
+            "Comma-separated list of allowed client IPs / CIDR networks "
+            "(e.g. '127.0.0.1,192.168.1.0/24'). "
+            "Overrides the MATPLOTLIB_TO_ORIGINLAB_ALLOW_IPS env var. "
+            "Leave unset to allow all clients."
+        ),
+    )
     args = parser.parse_args()
+
+    # CLI --allow-ips overrides the env var at startup
+    if args.allow_ips is not None:
+        os.environ["MATPLOTLIB_TO_ORIGINLAB_ALLOW_IPS"] = args.allow_ips
 
     uvicorn.run(
         "matplotlib_to_originlab_server.app:app",
