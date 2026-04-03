@@ -333,7 +333,7 @@ def matplotlib_to_origin(
                 'Xerr',
                 units=x_unit,
                 comments='',
-                axis='xEr')
+                axis='M')
 
         # Add data plot to graph layer
         # 200 -- line
