@@ -49,7 +49,7 @@ Implement the HTTP client in `remote/matplotlib_to_originlab_remote/__init__.py`
 - [x] `POST /job` — submit job, receive `job_id`
 - [x] `GET /job/{job_id}` — poll for status (`queued | running | success | failed | timeout | cancelled`)
 - [x] `GET /result/{job_id}` — download .opju or .pptx result
-- [ ] `POST /job/{job_id}/cancel` — cancel queued or running job
+- [x] `POST /job/{job_id}/cancel` — cancel queued or running job
 - [x] Polling helper: 3s interval, 360s timeout (see `AI_CONTEXT.md` §7)
 - [x] HTTPS with self-signed cert (`verify=False` or cert path)
 - [x] Bearer token authentication via env var
@@ -80,7 +80,8 @@ Full spec: see `AI_CONTEXT.md`.
 - [x] HTTPS (self-signed cert) + optional IP allowlist
 - [x] `--host` / `--port` CLI arguments (via `argparse` or `typer`)
 - [x] Windows service / auto-start setup instructions (server/README.md)
-- [ ] Integration tests (client ↔ server in CI, Windows runner)
+- [x] Integration tests — HTTP layer (Origin-free, runs on Linux CI)
+- [ ] Integration tests — end-to-end with real Origin (Windows self-hosted runner)
 
 ---
 

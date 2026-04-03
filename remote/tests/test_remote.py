@@ -5,6 +5,7 @@ Covers:
 - _extract_figure_data() — line, scatter, errorbar (yerr, xerr, both), bar
 - _poll_until_done() — success, failed, timeout
 - run() — happy path, job failure, polling timeout
+- cancel() — success, 404 not found, 409 wrong state
 
 Requires:
     pip install respx httpx matplotlib numpy pytest
@@ -29,6 +30,7 @@ import respx
 
 import matplotlib_to_originlab_remote as remote
 from matplotlib_to_originlab_remote import (
+    cancel,
     configure,
     run,
     _extract_figure_data,
@@ -397,6 +399,80 @@ class TestRun(unittest.TestCase):
             finally:
                 os.chdir(cwd)
         self.assertTrue(result.endswith("MyGraph.opju"))
+
+
+# ---------------------------------------------------------------------------
+# cancel()
+# ---------------------------------------------------------------------------
+
+class TestCancel(unittest.TestCase):
+
+    def setUp(self):
+        self._orig_url = remote._SERVER_URL
+        self._orig_token = remote._BEARER_TOKEN
+        remote._SERVER_URL = BASE
+        remote._BEARER_TOKEN = None
+
+    def tearDown(self):
+        remote._SERVER_URL = self._orig_url
+        remote._BEARER_TOKEN = self._orig_token
+
+    @respx.mock
+    def test_cancel_queued_job(self):
+        respx.post(f"{BASE}/job/job-q/cancel").mock(
+            return_value=httpx.Response(200, json={"job_id": "job-q", "status": "cancelled"})
+        )
+        result = cancel("job-q")
+        self.assertEqual(result, "cancelled")
+
+    @respx.mock
+    def test_cancel_running_job(self):
+        respx.post(f"{BASE}/job/job-r/cancel").mock(
+            return_value=httpx.Response(200, json={"job_id": "job-r", "status": "cancelled"})
+        )
+        result = cancel("job-r")
+        self.assertEqual(result, "cancelled")
+
+    @respx.mock
+    def test_cancel_not_found_raises(self):
+        respx.post(f"{BASE}/job/no-such/cancel").mock(
+            return_value=httpx.Response(404, json={"detail": "Job not found"})
+        )
+        with self.assertRaises(httpx.HTTPStatusError):
+            cancel("no-such")
+
+    @respx.mock
+    def test_cancel_terminal_state_raises(self):
+        """409 is returned when the job is already in a terminal state."""
+        respx.post(f"{BASE}/job/done-job/cancel").mock(
+            return_value=httpx.Response(
+                409, json={"detail": "Cannot cancel a job with status 'success'"}
+            )
+        )
+        with self.assertRaises(httpx.HTTPStatusError):
+            cancel("done-job")
+
+    @respx.mock
+    def test_cancel_sends_bearer_token(self):
+        remote._BEARER_TOKEN = "cancel-token"
+        sent_headers: dict = {}
+
+        def capture(request):
+            sent_headers.update(dict(request.headers))
+            return httpx.Response(200, json={"job_id": "j", "status": "cancelled"})
+
+        respx.post(f"{BASE}/job/j/cancel").mock(side_effect=capture)
+        cancel("j")
+        self.assertEqual(sent_headers.get("authorization"), "Bearer cancel-token")
+
+    @respx.mock
+    def test_cancel_server_url_override(self):
+        alt = "http://alt-server:9000"
+        respx.post(f"{alt}/job/job-x/cancel").mock(
+            return_value=httpx.Response(200, json={"job_id": "job-x", "status": "cancelled"})
+        )
+        result = cancel("job-x", server_url=alt)
+        self.assertEqual(result, "cancelled")
 
 
 if __name__ == "__main__":

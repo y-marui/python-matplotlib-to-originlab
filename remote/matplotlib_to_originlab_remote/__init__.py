@@ -21,7 +21,7 @@ import numpy as np
 from matplotlib.container import ErrorbarContainer, BarContainer
 
 __version__ = "0.1.0"
-__all__ = ["run", "configure"]
+__all__ = ["run", "configure", "cancel"]
 
 # Default server endpoint — override with configure() or env var.
 _SERVER_URL: str = os.environ.get(
@@ -310,3 +310,40 @@ def run(
 
     Path(output_path).write_bytes(resp.content)
     return str(Path(output_path).resolve())
+
+
+def cancel(
+    job_id: str,
+    *,
+    server_url: str | None = None,
+    verify: bool | str = False,
+) -> str:
+    """Cancel a queued or running job on the server.
+
+    Parameters
+    ----------
+    job_id:
+        The job ID returned by a previous ``run()`` call (or obtained from
+        ``POST /job``).
+    server_url:
+        Override the server URL for this call only.
+    verify:
+        SSL verification (same semantics as :func:`run`).
+
+    Returns
+    -------
+    str
+        The final status string as reported by the server (``"cancelled"``
+        on success).
+
+    Raises
+    ------
+    httpx.HTTPStatusError
+        If the server returns an HTTP error (e.g. 404 job not found, 409
+        already in a terminal state).
+    """
+    url = (server_url or _SERVER_URL).rstrip("/")
+    with httpx.Client(verify=verify) as client:
+        resp = client.post(f"{url}/job/{job_id}/cancel", headers=_headers())
+        resp.raise_for_status()
+    return resp.json().get("status", "cancelled")

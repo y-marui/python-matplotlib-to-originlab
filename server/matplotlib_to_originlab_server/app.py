@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
+    from contextlib import asynccontextmanager
     from fastapi import FastAPI, HTTPException, Request
     from fastapi.responses import FileResponse, JSONResponse
     from starlette.middleware.base import BaseHTTPMiddleware
@@ -99,17 +100,17 @@ if ALLOW_NETWORKS:
 # Lifecycle
 # ---------------------------------------------------------------------------
 
-@app.on_event("startup")
-async def _on_startup():
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
     JOBS_DIR.mkdir(parents=True, exist_ok=True)
     db.init_db()
     db.recover_running_jobs()
     worker.start_worker()
-
-
-@app.on_event("shutdown")
-async def _on_shutdown():
+    yield
     worker.stop_worker()
+
+
+app.router.lifespan_context = _lifespan
 
 
 # ---------------------------------------------------------------------------
