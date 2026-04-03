@@ -83,6 +83,7 @@ def _extract_figure_data(fig, ax, **kwargs) -> dict:
             ydata = ydata.to(ax.yaxis.get_units()).value
 
         yerr = None
+        xerr = None
         if container is None:
             raw_label = line.get_label()
             label = raw_label if not raw_label.startswith("_") else ""
@@ -97,12 +98,22 @@ def _extract_figure_data(fig, ax, **kwargs) -> dict:
         elif isinstance(container, matplotlib.container.ErrorbarContainer):
             label = container.get_label() or ""
             plot_type = "errorbar"
-            yerr_lo = container.lines[1][0].get_ydata()
-            yerr_hi = container.lines[1][1].get_ydata()
-            yerr_arr = (yerr_hi - yerr_lo) / 2
-            if hasattr(yerr_arr, "value"):
-                yerr_arr = yerr_arr.to(ax.yaxis.get_units()).value
-            yerr = np.float64(yerr_arr).tolist()
+            # Extract via barlinecols (robust for any capsize).
+            # matplotlib stores barcols in order: xerr first, then yerr.
+            _barcol_idx = 0
+            if container.has_xerr:
+                segs = container.lines[2][_barcol_idx].get_segments()
+                xerr_arr = np.array([(s[1][0] - s[0][0]) / 2 for s in segs])
+                if hasattr(xerr_arr, "value"):
+                    xerr_arr = xerr_arr.to(ax.xaxis.get_units()).value
+                xerr = np.float64(xerr_arr).tolist()
+                _barcol_idx += 1
+            if container.has_yerr:
+                segs = container.lines[2][_barcol_idx].get_segments()
+                yerr_arr = np.array([(s[1][1] - s[0][1]) / 2 for s in segs])
+                if hasattr(yerr_arr, "value"):
+                    yerr_arr = yerr_arr.to(ax.yaxis.get_units()).value
+                yerr = np.float64(yerr_arr).tolist()
         else:
             warnings.warn(f"unknown container type {type(container)}, skipping")
             continue
@@ -114,6 +125,7 @@ def _extract_figure_data(fig, ax, **kwargs) -> dict:
             "x": np.float64(xdata).tolist(),
             "y": np.float64(ydata).tolist(),
             "yerr": yerr,
+            "xerr": xerr,
             "label": label,
             "color": mcolors.to_hex(plt.getp(line, "color")),
             "linestyle": plt.getp(line, "linestyle"),

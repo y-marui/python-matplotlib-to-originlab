@@ -99,9 +99,11 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
         yerr = plot.get("yerr")
 
         if plot["type"] == "errorbar":
+            xerr = plot.get("xerr")
             ax.errorbar(
                 x, y,
                 yerr=np.array(yerr) if yerr is not None else None,
+                xerr=np.array(xerr) if xerr is not None else None,
                 fmt="o" if marker else "-",
                 label=label,
                 color=color,
