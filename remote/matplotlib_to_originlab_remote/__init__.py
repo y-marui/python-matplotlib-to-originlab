@@ -18,7 +18,7 @@ import matplotlib
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.container import ErrorbarContainer, BarContainer
+from matplotlib.container import BarContainer, ErrorbarContainer
 
 __version__ = "0.1.0"
 __all__ = ["run", "configure", "cancel"]
@@ -56,23 +56,19 @@ def configure(
 # Figure serialisation
 # ---------------------------------------------------------------------------
 
+
 def _extract_figure_data(fig, ax, **kwargs) -> dict:
     """Extract matplotlib figure/axes state into a JSON-serialisable dict."""
 
-    errorbar_containers = [
-        c for c in ax.containers if isinstance(c, ErrorbarContainer)
-    ]
-    container_children = {
-        child for c in errorbar_containers for child in c.get_children()
-    }
+    errorbar_containers = [c for c in ax.containers if isinstance(c, ErrorbarContainer)]
+    container_children = {child for c in errorbar_containers for child in c.get_children()}
 
     plots: list[dict] = []
 
     # --- lines and errorbars ---
-    line_entries = (
-        [(line, None) for line in ax.lines if line not in container_children]
-        + [(c.lines[0], c) for c in errorbar_containers]
-    )
+    line_entries = [(line, None) for line in ax.lines if line not in container_children] + [
+        (c.lines[0], c) for c in errorbar_containers
+    ]
 
     for line, container in line_entries:
         xdata = line.get_xdata()
@@ -120,22 +116,24 @@ def _extract_figure_data(fig, ax, **kwargs) -> dict:
 
         label = re.sub(r"\$(.+?)\$", r"\\q(\1)", label)
 
-        plots.append({
-            "type": plot_type,
-            "x": np.float64(xdata).tolist(),
-            "y": np.float64(ydata).tolist(),
-            "yerr": yerr,
-            "xerr": xerr,
-            "label": label,
-            "color": mcolors.to_hex(plt.getp(line, "color")),
-            "linestyle": plt.getp(line, "linestyle"),
-            "marker": str(plt.getp(line, "marker")),
-            "markersize": float(plt.getp(line, "ms")),
-            "mec": mcolors.to_hex(plt.getp(line, "mec")),
-            "mfc": mcolors.to_hex(plt.getp(line, "mfc")),
-            "mew": float(plt.getp(line, "mew")),
-            "linewidth": float(plt.getp(line, "linewidth")),
-        })
+        plots.append(
+            {
+                "type": plot_type,
+                "x": np.float64(xdata).tolist(),
+                "y": np.float64(ydata).tolist(),
+                "yerr": yerr,
+                "xerr": xerr,
+                "label": label,
+                "color": mcolors.to_hex(plt.getp(line, "color")),
+                "linestyle": plt.getp(line, "linestyle"),
+                "marker": str(plt.getp(line, "marker")),
+                "markersize": float(plt.getp(line, "ms")),
+                "mec": mcolors.to_hex(plt.getp(line, "mec")),
+                "mfc": mcolors.to_hex(plt.getp(line, "mfc")),
+                "mew": float(plt.getp(line, "mew")),
+                "linewidth": float(plt.getp(line, "linewidth")),
+            }
+        )
 
     # --- bar containers ---
     bar_containers = [c for c in ax.containers if isinstance(c, BarContainer)]
@@ -153,11 +151,13 @@ def _extract_figure_data(fig, ax, **kwargs) -> dict:
                 [(c.get_x(), c.get_height()) for c in bc.get_children()],
                 key=lambda t: t[0],
             )
-            groups.append({
-                "label": bc.get_label(),
-                "y": [float(v) for _, v in y_sorted],
-                "color": mcolors.to_hex(plt.getp(bc[0], "facecolor")),
-            })
+            groups.append(
+                {
+                    "label": bc.get_label(),
+                    "y": [float(v) for _, v in y_sorted],
+                    "color": mcolors.to_hex(plt.getp(bc[0], "facecolor")),
+                }
+            )
         bars.append({"x_categories": x_categories, "groups": groups})
 
     # --- axis metadata ---
@@ -196,6 +196,7 @@ def _extract_figure_data(fig, ax, **kwargs) -> dict:
 # HTTP transport helpers
 # ---------------------------------------------------------------------------
 
+
 def _headers() -> dict[str, str]:
     if _BEARER_TOKEN:
         return {"Authorization": f"Bearer {_BEARER_TOKEN}"}
@@ -223,14 +224,13 @@ def _poll_until_done(
             return status
         time.sleep(interval)
         elapsed += interval
-    raise TimeoutError(
-        f"Polling timed out after {timeout}s waiting for job {job_id}."
-    )
+    raise TimeoutError(f"Polling timed out after {timeout}s waiting for job {job_id}.")
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def run(
     fig,
@@ -295,8 +295,7 @@ def run(
         status = _poll_until_done(client, url, job_id)
         if status != "success":
             raise RuntimeError(
-                f"Job {job_id} ended with status {status!r}. "
-                "Check the server logs for details."
+                f"Job {job_id} ended with status {status!r}. Check the server logs for details."
             )
 
         # 3. Download result

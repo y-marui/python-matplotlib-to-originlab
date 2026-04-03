@@ -91,10 +91,10 @@ Full spec: see `AI_CONTEXT.md`.
 - [ ] Publish `matplotlib-to-originlab-remote` to PyPI (bundled with client)
 - [ ] Publish `matplotlib-to-originlab-server` to PyPI
 - [ ] `matplotlib-to-originlab-core` stays local (not on PyPI)
-- [ ] GitHub Actions CI:
-  - Lint / type check (all packages)
-  - Tests on Linux (client + remote stubs)
-  - Tests on Windows with OriginLab (core + server, self-hosted runner)
+- [x] GitHub Actions CI:
+  - [x] Lint / type check — ruff + mypy (remote, server)
+  - [x] Tests on Linux — remote (respx) + server HTTP layer (FastAPI TestClient)
+  - [ ] Tests on Windows with OriginLab (core + server, self-hosted runner)
 - [ ] Versioning strategy (single version across monorepo vs. independent)
 
 ---

@@ -31,3 +31,44 @@ ipykernel = "^6.20.2"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+# importlib mode avoids __init__.py namespace conflicts when running tests
+# from multiple sub-packages at once.
+addopts = ["--import-mode=importlib"]
+
+# ---------------------------------------------------------------------------
+# Ruff — linting and formatting
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+# Lint only the cross-platform packages; core/ is Windows-only.
+exclude = ["core", "client", "sample", "Documentation", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E501",   # line too long — not enforced (formatter handles layout)
+    "F841",   # local variable assigned but never used (common in WIP code)
+]
+
+# ---------------------------------------------------------------------------
+# Mypy — type checking
+# ---------------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+# Keep strict checking off for now; tighten per-package as needed.
+warn_unused_ignores = false
+
+[[tool.mypy.overrides]]
+# matplotlib / numpy stubs are incomplete; suppress attr/arg errors in remote.
+module = ["matplotlib_to_originlab_remote.*"]
+ignore_errors = true

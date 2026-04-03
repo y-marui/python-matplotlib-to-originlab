@@ -30,6 +30,7 @@ _worker_thread: threading.Thread | None = None
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -52,6 +53,7 @@ def _log(job_id: str, message: str) -> None:
 # Origin process management
 # ---------------------------------------------------------------------------
 
+
 def force_restart_origin() -> None:
     """Kill all running Origin processes.  The next job will re-attach."""
     logger.warning("Forcing Origin restart")
@@ -67,12 +69,14 @@ def force_restart_origin() -> None:
 # Figure reconstruction + core execution
 # ---------------------------------------------------------------------------
 
+
 def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
     """Rebuild a matplotlib figure from *figure_data* and run the core.
 
     Returns the path to the saved result file.
     """
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
@@ -101,7 +105,8 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
         if plot["type"] == "errorbar":
             xerr = plot.get("xerr")
             ax.errorbar(
-                x, y,
+                x,
+                y,
                 yerr=np.array(yerr) if yerr is not None else None,
                 xerr=np.array(xerr) if xerr is not None else None,
                 fmt="o" if marker else "-",
@@ -113,7 +118,8 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
             )
         elif plot["type"] == "scatter":
             ax.plot(
-                x, y,
+                x,
+                y,
                 linestyle="None",
                 marker=marker or "o",
                 markersize=markersize,
@@ -125,7 +131,8 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
             )
         else:  # "line" or "line+scatter"
             ax.plot(
-                x, y,
+                x,
+                y,
                 linestyle=linestyle,
                 marker=marker,
                 markersize=markersize,
@@ -182,7 +189,8 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
         # windows and clears the workspace without quitting Origin itself.
         op.lt_exec("doc -s;")
         matplotlib_to_origin(
-            fig, ax,
+            fig,
+            ax,
             folder_name=figure_data.get("folder_name"),
             workbook_name=figure_data.get("workbook_name", "Book"),
             worksheet_name=figure_data.get("worksheet_name", "Sheet"),
@@ -206,6 +214,7 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
 # ---------------------------------------------------------------------------
 # Job execution
 # ---------------------------------------------------------------------------
+
 
 def _run_job(job: dict) -> None:
     """Execute a single job.  Updates the DB with the outcome."""
@@ -253,12 +262,14 @@ def _run_job(job: dict) -> None:
         )
         _log(
             job_id,
-            json.dumps({
-                "job_id": job_id,
-                "status": "timeout",
-                "execution_time": MAX_RUNTIME,
-                "error": "timeout",
-            }),
+            json.dumps(
+                {
+                    "job_id": job_id,
+                    "status": "timeout",
+                    "execution_time": MAX_RUNTIME,
+                    "error": "timeout",
+                }
+            ),
         )
     elif exc_holder:
         err = str(exc_holder[0])
@@ -266,12 +277,14 @@ def _run_job(job: dict) -> None:
         db.update_job(job_id, status="failed", finished_at=finished_at, error=err)
         _log(
             job_id,
-            json.dumps({
-                "job_id": job_id,
-                "status": "failed",
-                "execution_time": None,
-                "error": err,
-            }),
+            json.dumps(
+                {
+                    "job_id": job_id,
+                    "status": "failed",
+                    "execution_time": None,
+                    "error": err,
+                }
+            ),
         )
     else:
         result_path = path_holder[0] if path_holder else None
@@ -289,18 +302,21 @@ def _run_job(job: dict) -> None:
         )
         _log(
             job_id,
-            json.dumps({
-                "job_id": job_id,
-                "status": "success",
-                "execution_time": exec_time,
-                "error": None,
-            }),
+            json.dumps(
+                {
+                    "job_id": job_id,
+                    "status": "success",
+                    "execution_time": exec_time,
+                    "error": None,
+                }
+            ),
         )
 
 
 # ---------------------------------------------------------------------------
 # Worker loop
 # ---------------------------------------------------------------------------
+
 
 def _worker_loop() -> None:
     while not _stop_event.is_set():
@@ -317,9 +333,7 @@ def _worker_loop() -> None:
 def start_worker() -> threading.Thread:
     global _worker_thread
     _stop_event.clear()
-    _worker_thread = threading.Thread(
-        target=_worker_loop, daemon=True, name="origin-worker"
-    )
+    _worker_thread = threading.Thread(target=_worker_loop, daemon=True, name="origin-worker")
     _worker_thread.start()
     return _worker_thread
 

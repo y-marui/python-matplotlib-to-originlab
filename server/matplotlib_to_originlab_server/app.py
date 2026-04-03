@@ -27,6 +27,7 @@ from pathlib import Path
 
 try:
     from contextlib import asynccontextmanager
+
     from fastapi import FastAPI, HTTPException, Request
     from fastapi.responses import FileResponse, JSONResponse
     from starlette.middleware.base import BaseHTTPMiddleware
@@ -70,7 +71,7 @@ app = FastAPI(title="matplotlib-to-originlab-server")
 class _BearerTokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         auth = request.headers.get("Authorization", "")
-        if not auth.startswith("Bearer ") or auth[len("Bearer "):] != BEARER_TOKEN:
+        if not auth.startswith("Bearer ") or auth[len("Bearer ") :] != BEARER_TOKEN:
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
         return await call_next(request)
 
@@ -100,6 +101,7 @@ if ALLOW_NETWORKS:
 # Lifecycle
 # ---------------------------------------------------------------------------
 
+
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     JOBS_DIR.mkdir(parents=True, exist_ok=True)
@@ -116,6 +118,7 @@ app.router.lifespan_context = _lifespan
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @app.post("/job", status_code=201)
 async def submit_job(request: Request):
@@ -215,6 +218,7 @@ async def health():
 @app.get("/version")
 async def version():
     from matplotlib_to_originlab_server import __version__ as server_ver
+
     try:
         from matplotlib_to_originlab_core import __version__ as core_ver
     except Exception:
@@ -225,6 +229,7 @@ async def version():
 # ---------------------------------------------------------------------------
 # Entry point (used by __main__.py and the console script)
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     import argparse

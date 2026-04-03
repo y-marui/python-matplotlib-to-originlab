@@ -44,17 +44,14 @@ def _connect():
 def create_job(job_id: str, figure_data_json: str, created_at: str) -> None:
     with _lock, _connect() as conn:
         conn.execute(
-            "INSERT INTO jobs (id, status, created_at, figure_data)"
-            " VALUES (?, 'queued', ?, ?)",
+            "INSERT INTO jobs (id, status, created_at, figure_data) VALUES (?, 'queued', ?, ?)",
             (job_id, created_at, figure_data_json),
         )
 
 
 def get_job(job_id: str) -> dict | None:
     with _lock, _connect() as conn:
-        row = conn.execute(
-            "SELECT * FROM jobs WHERE id = ?", (job_id,)
-        ).fetchone()
+        row = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
         return dict(row) if row else None
 
 
@@ -71,23 +68,18 @@ def get_next_queued_job() -> dict | None:
     """Return the oldest queued job, or None if the queue is empty."""
     with _lock, _connect() as conn:
         row = conn.execute(
-            "SELECT * FROM jobs WHERE status = 'queued'"
-            " ORDER BY created_at LIMIT 1"
+            "SELECT * FROM jobs WHERE status = 'queued' ORDER BY created_at LIMIT 1"
         ).fetchone()
         return dict(row) if row else None
 
 
 def get_all_jobs() -> list[dict]:
     with _lock, _connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM jobs ORDER BY created_at DESC"
-        ).fetchall()
+        rows = conn.execute("SELECT * FROM jobs ORDER BY created_at DESC").fetchall()
         return [dict(r) for r in rows]
 
 
 def recover_running_jobs() -> None:
     """On server startup, re-queue any jobs that were interrupted mid-run."""
     with _lock, _connect() as conn:
-        conn.execute(
-            "UPDATE jobs SET status = 'queued' WHERE status = 'running'"
-        )
+        conn.execute("UPDATE jobs SET status = 'queued' WHERE status = 'running'")

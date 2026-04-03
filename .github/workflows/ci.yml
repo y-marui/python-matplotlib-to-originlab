@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch when a new commit is pushed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Lint & type check (Linux, no Origin required)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint & type check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install lint tools
+        run: |
+          uv pip install --system \
+            ruff \
+            mypy \
+            httpx \
+            fastapi \
+            starlette \
+            matplotlib \
+            numpy
+
+      - name: ruff check
+        run: ruff check remote/ server/
+
+      - name: ruff format check
+        run: ruff format --check remote/ server/
+
+      - name: mypy — remote
+        run: mypy remote/matplotlib_to_originlab_remote
+
+      - name: mypy — server app
+        run: mypy server/matplotlib_to_originlab_server/app.py server/matplotlib_to_originlab_server/db.py
+
+  # ---------------------------------------------------------------------------
+  # Tests — Origin-free (Linux)
+  # Covers: remote (respx mock) + server HTTP layer (FastAPI TestClient + mocked worker/db)
+  # ---------------------------------------------------------------------------
+  test:
+    name: Tests (Linux / Origin-free)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install runtime + test dependencies
+        run: |
+          uv pip install --system \
+            "fastapi>=0.100" \
+            "httpx>=0.28" \
+            starlette \
+            matplotlib \
+            numpy \
+            pytest \
+            respx \
+            anyio
+          # Install packages without pulling in Windows-only core or originpro
+          uv pip install --system --no-deps -e remote/ -e server/
+
+      - name: pytest — remote
+        run: pytest remote/tests/ -v --tb=short
+
+      - name: pytest — server (HTTP layer)
+        run: pytest server/tests/ -v --tb=short
+
+  # ---------------------------------------------------------------------------
+  # Tests — Windows + OriginLab (self-hosted, optional)
+  # Runs only when the label "test-origin" is applied to a PR,
+  # or on push to main.
+  # ---------------------------------------------------------------------------
+  test-origin:
+    name: Tests (Windows / Origin)
+    runs-on: [self-hosted, windows, originlab]
+    if: |
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'test-origin')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install core + test dependencies
+        run: |
+          uv pip install --system pytest
+          uv pip install --system --no-deps -e core/
+
+      - name: pytest — core logic (Origin-free unit tests)
+        run: pytest core/tests/ -v --tb=short
