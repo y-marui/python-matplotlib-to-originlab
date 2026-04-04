@@ -72,7 +72,7 @@ Full spec: see `AI_CONTEXT.md`.
 - [x] `GET /queue` — return current queue state (ops use)
 - [x] Single-threaded FIFO worker (see `AI_CONTEXT.md` §9)
 - [x] Origin control via win32com with `threading.Lock()` (see `AI_CONTEXT.md` §10–11)
-- [x] State reset: `doc -s;` between jobs; full restart on failure/timeout
+- [x] State reset: `op.new(asksave=False)` between jobs; full restart on failure/timeout (Origin COM objects require STA thread affinity — all calls run in the worker thread)
 - [x] Startup recovery: `running → queued` on server restart
 - [x] Structured per-job logging to `log.txt` + DB summary
 - [x] `MAX_RUNTIME = 300` s timeout with watchdog
@@ -81,7 +81,7 @@ Full spec: see `AI_CONTEXT.md`.
 - [x] `--host` / `--port` CLI arguments (via `argparse` or `typer`)
 - [x] Windows service / auto-start setup instructions (server/README.md)
 - [x] Integration tests — HTTP layer (Origin-free, runs on Linux CI)
-- [ ] Integration tests — end-to-end with real Origin (Windows self-hosted runner)
+- [x] Integration tests — end-to-end with real Origin (Windows self-hosted runner)
 
 ---
 
