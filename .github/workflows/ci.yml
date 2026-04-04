@@ -111,7 +111,7 @@ jobs:
   # This is the single status check required by the branch ruleset.
   # ---------------------------------------------------------------------------
   build:
-    name: Build (installability check)
+    name: build
     needs: [security, lint, test]
     runs-on: ubuntu-latest
 
