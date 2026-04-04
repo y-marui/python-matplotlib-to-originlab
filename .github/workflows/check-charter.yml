@@ -1,0 +1,13 @@
+name: check-charter
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check:
+    uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+    permissions:
+      contents: write
+      pull-requests: write

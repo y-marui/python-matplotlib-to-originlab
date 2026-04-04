@@ -33,9 +33,30 @@ import numpy as np
 import OriginExt
 import originpro as op
 import win32com.client
-from matplotlib.axes import ErrorbarContainer, BarContainer
+from matplotlib.container import BarContainer, ErrorbarContainer
 
 __version__ = "0.1.2"
+
+
+# ---------------------------------------------------------------------------
+# Astropy units helpers
+# ---------------------------------------------------------------------------
+
+def _unit_str(unit) -> str:
+    """Return a display string for an axis unit (astropy or other), or ''."""
+    if unit is None:
+        return ''
+    try:
+        # astropy units expose .to_string(); fall back to str() for others
+        return unit.to_string()
+    except AttributeError:
+        return str(unit)
+
+
+def _strip_unit(v) -> float:
+    """Return the numeric value of *v*, stripping any astropy unit wrapper."""
+    return float(v.value) if hasattr(v, "value") else float(v)
+
 
 # Ideas for improvements:
 # - Compile line data (labels, format, color) into df
@@ -229,6 +250,7 @@ def matplotlib_to_origin(
         if hasattr(ydata, "value"):
             ydata = ydata.to(ax.yaxis.get_units()).value
         yerrdata = None
+        xerrdata = None
 
         if container is None:
             label = line.get_label() if line.get_label()[0] != "_" else ''
@@ -238,6 +260,7 @@ def matplotlib_to_origin(
             x_col_idx = next_idx
             y_col_idx = next_idx + 1
             yerr_col_idx = -1
+            xerr_col_idx = -1
             next_idx += 2
 
         elif isinstance(container, matplotlib.container.ErrorbarContainer):
@@ -245,35 +268,54 @@ def matplotlib_to_origin(
             label = re.sub(r"\$(.+?)\$", r"\\q(\1)", label)
 
             line = container.lines[0]
-            # Indices for x, y and yerr columns
+
+            # Extract error values from bar line collections (works for any capsize).
+            # matplotlib stores barcols in order: xerr first, then yerr.
+            _barcol_idx = 0
+            if container.has_xerr:
+                segs = container.lines[2][_barcol_idx].get_segments()
+                xerrdata = np.array([(s[1][0] - s[0][0]) / 2 for s in segs])
+                if hasattr(xerrdata, "value"):
+                    xerrdata = xerrdata.to(ax.xaxis.get_units()).value
+                _barcol_idx += 1
+            if container.has_yerr:
+                segs = container.lines[2][_barcol_idx].get_segments()
+                yerrdata = np.array([(s[1][1] - s[0][1]) / 2 for s in segs])
+                if hasattr(yerrdata, "value"):
+                    yerrdata = yerrdata.to(ax.yaxis.get_units()).value
+
+            # Column indices: x, y, [yerr], [xerr]
             x_col_idx = next_idx
             y_col_idx = next_idx + 1
-            yerr_col_idx = next_idx + 2
-            next_idx += 3
-
-            yerrldata = container.lines[1][0].get_ydata()
-            yerrudata = container.lines[1][1].get_ydata()
-            yerrdata = (yerrudata - yerrldata) / 2
-            if hasattr(yerrdata, "value"):
-                yerrdata = yerrdata.to(ax.yaxis.get_units()).value
+            next_idx += 2
+            yerr_col_idx = -1
+            xerr_col_idx = -1
+            if yerrdata is not None:
+                yerr_col_idx = next_idx
+                next_idx += 1
+            if xerrdata is not None:
+                xerr_col_idx = next_idx
+                next_idx += 1
 
         else:
             warnings.warn(f"unknown container {container}")
             continue
 
         # Add data to sheet
+        x_unit = _unit_str(ax.xaxis.get_units())
+        y_unit = _unit_str(ax.yaxis.get_units())
         wks.from_list(
             x_col_idx,
             np.float64(xdata).tolist(),
             'X',
-            units='Unit',
+            units=x_unit,
             comments='',
             axis='X')
         wks.from_list(
             y_col_idx,
             np.float64(ydata).tolist(),
             'Y',
-            units='Unit',
+            units=y_unit,
             comments=label,
             axis='Y')
         if yerrdata is not None:
@@ -281,9 +323,17 @@ def matplotlib_to_origin(
                 yerr_col_idx,
                 np.float64(yerrdata).tolist(),
                 'Yerr',
-                units='Unit',
+                units=y_unit,
                 comments='',
                 axis='E')
+        if xerrdata is not None:
+            wks.from_list(
+                xerr_col_idx,
+                np.float64(xerrdata).tolist(),
+                'Xerr',
+                units=x_unit,
+                comments='',
+                axis='M')
 
         # Add data plot to graph layer
         # 200 -- line
@@ -315,7 +365,8 @@ def matplotlib_to_origin(
                 y_col_idx,
                 x_col_idx,
                 type="l",
-                colyerr=yerr_col_idx)
+                colyerr=yerr_col_idx,
+                colxerr=xerr_col_idx)
             lc = colors.to_hex(plt.getp(line, 'color'))
             # Set line color and line width
             p.set_cmd(
@@ -332,7 +383,8 @@ def matplotlib_to_origin(
                 y_col_idx,
                 x_col_idx,
                 type="s",
-                colyerr=yerr_col_idx)
+                colyerr=yerr_col_idx,
+                colxerr=xerr_col_idx)
             # Set symbol size, edge color, face color
             mec = colors.to_hex(plt.getp(line, 'mec'))
             mfc = colors.to_hex(plt.getp(line, 'mfc'))
@@ -353,7 +405,8 @@ def matplotlib_to_origin(
                 y_col_idx,
                 x_col_idx,
                 type="y",
-                colyerr=yerr_col_idx)
+                colyerr=yerr_col_idx,
+                colxerr=xerr_col_idx)
             # Set symbol size, edge color, face color
             lc = colors.to_hex(plt.getp(line, 'color'))
             mec = colors.to_hex(plt.getp(line, 'mec'))
@@ -388,7 +441,7 @@ def matplotlib_to_origin(
             x_col_idx,
             xdata.tolist(),
             'X',
-            units='Unit',
+            units=_unit_str(ax.xaxis.get_units()),
             comments='',
             axis='X')
 
@@ -403,7 +456,7 @@ def matplotlib_to_origin(
                 y_col_idx + i,
                 np.float64(ydata).tolist(),
                 'Y',
-                units='Unit',
+                units=_unit_str(ax.yaxis.get_units()),
                 comments=label,
                 axis='Y')
 
@@ -428,9 +481,9 @@ def matplotlib_to_origin(
     # https://matplotlib.org/api/axes_api.html
     # Get figure dimensions
     # Set figure dimensions
-    # Get axes ranges
-    x_axis_range = ax.get_xlim()
-    y_axis_range = ax.get_ylim()
+    # Get axes ranges (convert Quantity to float for robustness with astropy)
+    x_axis_range = tuple(_strip_unit(v) for v in ax.get_xlim())
+    y_axis_range = tuple(_strip_unit(v) for v in ax.get_ylim())
     # Get axes scale types
     x_axis_scale = ax.get_xscale()
     y_axis_scale = ax.get_yscale()
@@ -443,11 +496,16 @@ def matplotlib_to_origin(
     # Set axes titles (xb for bottom axis, yl for left y-axis, etc.)
     gl.axis("x").title = x_axis_label
     gl.axis("y").title = y_axis_label
-    # Set fontsizes
-    # graph_layer.Execute('layer.x.label.pt = 12;')
-    # graph_layer.Execute('layer.y.label.pt = 12;')
-    # graph_layer.Execute('xb.fsize = 16;')
-    # graph_layer.Execute('yl.fsize = 16;')
+    # Set font sizes for axis titles (in points)
+    gl.lt_exec(f'layer.x.label.pt = {ax.xaxis.label.get_fontsize():.0f};')
+    gl.lt_exec(f'layer.y.label.pt = {ax.yaxis.label.get_fontsize():.0f};')
+    # Set font sizes for tick labels
+    _x_ticks = ax.xaxis.get_ticklabels()
+    _y_ticks = ax.yaxis.get_ticklabels()
+    if _x_ticks:
+        gl.lt_exec(f'xb.fsize = {_x_ticks[0].get_fontsize():.0f};')
+    if _y_ticks:
+        gl.lt_exec(f'yl.fsize = {_y_ticks[0].get_fontsize():.0f};')
 
     # Set axis scales
     set_axis_scale(gl, axis='x', scale=x_axis_scale)
@@ -478,17 +536,16 @@ def matplotlib_to_origin(
     # graph_layer.Execute('layer -g ' + str(group_start_idx) + ' '  + str(group_end_idx) + ';')
     # graph_layer.Execute('Rescale')
     op.lt_exec('legend -r')  # re-construct legend
-    title = ax.get_legend()
-    # Whether ledgend exists
-    if title is None:
-        title = ""
-    else:
-        title = title.get_title().get_text()
-    # If title exsits add title
-    if title != "":
-        title = re.sub(r"\$(.+?)\$", r"\\q(\1)", title)
-        legend_text = op.get_lt_str("legend.text")
-        op.lt_exec(f"legend.text$={title}\n{legend_text};")
+    legend = ax.get_legend()
+    if legend is not None:
+        legend_title = legend.get_title().get_text()
+        if legend_title:
+            legend_title = re.sub(r"\$(.+?)\$", r"\\q(\1)", legend_title)
+            legend_text = op.get_lt_str("legend.text")
+            op.lt_exec(f"legend.text$={legend_title}\n{legend_text};")
+        # Set legend text font size
+        if legend.get_texts():
+            op.lt_exec(f'legend.fsize = {legend.get_texts()[0].get_fontsize():.0f};')
 
     return op
 

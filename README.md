@@ -1,5 +1,11 @@
 # Matplotlib to Originlab
 
+> **This is the reference (English) version.**
+> The canonical (Japanese) version is [README-jp.md](README-jp.md).
+
+[![CI](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Convert matplotlib figures to OriginLab graphs — automatically choosing local
 or remote execution depending on whether OriginLab is available.
 
@@ -148,3 +154,6 @@ Key changes from the fork:
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+*This document has a Japanese canonical version [README-jp.md](README-jp.md). Update both in the same commit when editing.*

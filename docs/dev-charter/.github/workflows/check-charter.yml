@@ -1,0 +1,113 @@
+# Reusable workflow: check if dev-charter is up to date and open a PR if not.
+#
+# Usage in your project:
+#
+#   jobs:
+#     check:
+#       uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+#       permissions:
+#         contents: write
+#         pull-requests: write
+#
+# NOTE: If your repository has Branch Protection rules that prevent direct pushes,
+# you may need to add a bypass rule for the GitHub Actions bot
+# (Settings > Rules > Rulesets > Bypass list > Add bypass > GitHub Actions).
+
+name: check-charter
+
+on:
+  workflow_call:
+    inputs:
+      prefix:
+        description: "Path to the dev-charter subtree within the project"
+        default: "docs/dev-charter"
+        type: string
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout (full history required for git subtree)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check VERSION
+        id: versions
+        run: |
+          REMOTE=$(curl -sf --max-time 10 \
+            "https://raw.githubusercontent.com/y-marui/dev-charter/main/VERSION" \
+            | head -1)
+          if [ -z "$REMOTE" ]; then
+            echo "::error::Failed to fetch remote VERSION from dev-charter"
+            exit 1
+          fi
+
+          LOCAL=$(head -1 "${{ inputs.prefix }}/VERSION" 2>/dev/null || echo "")
+          if [ -z "$LOCAL" ]; then
+            echo "::error::Local VERSION not found at ${{ inputs.prefix }}/VERSION"
+            exit 1
+          fi
+
+          echo "local:  ${LOCAL}"
+          echo "remote: ${REMOTE}"
+          echo "remote=${REMOTE}" >> "$GITHUB_OUTPUT"
+
+          if [ "$LOCAL" = "$REMOTE" ]; then
+            echo "dev-charter is up to date"
+            echo "outdated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "dev-charter is outdated"
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update branch
+        if: steps.versions.outputs.outdated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REMOTE="${{ steps.versions.outputs.remote }}"
+          BRANCH="update-charter"
+          PREFIX="${{ inputs.prefix }}"
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          git remote add dev-charter https://github.com/y-marui/dev-charter.git || true
+          git fetch dev-charter main
+
+          git checkout -B "${BRANCH}" origin/main
+
+          git subtree pull \
+            --prefix="${PREFIX}" \
+            dev-charter main \
+            --squash \
+            -m "chore: update dev-charter to ${REMOTE}"
+
+          git push origin "${BRANCH}" --force-with-lease
+
+      - name: Create PR
+        if: steps.versions.outputs.outdated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REMOTE="${{ steps.versions.outputs.remote }}"
+          CHECKLIST_URL="https://github.com/y-marui/dev-charter/blob/main/UPDATE_CHECKLIST.md"
+
+          gh pr create \
+            --title "chore: update dev-charter to ${REMOTE}" \
+            --body "$(cat <<EOF
+          ## dev-charter を ${REMOTE} に更新
+
+          \`git subtree pull\` を自動的に適用しました。
+          マージ後、[更新チェックリスト](${CHECKLIST_URL}) に従って対応してください。
+          EOF
+          )" \
+            --base main \
+            --head update-charter \
+            --label "dev-charter" 2>/dev/null || true
