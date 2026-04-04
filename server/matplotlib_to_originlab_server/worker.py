@@ -185,9 +185,9 @@ def _reconstruct_and_run(figure_data: dict, output_dir: Path) -> Path:
 
     with _origin_lock:
         # Reset Origin state between jobs so leftover workbooks / graphs from
-        # the previous job do not pollute this one.  `doc -n` creates a new
-        # project, clearing all workbooks/graphs without quitting Origin.
-        op.lt_exec("doc -n;")
+        # the previous job do not pollute this one.  asksave=False suppresses
+        # any save dialog (safe because each job saves explicitly beforehand).
+        op.new(asksave=False)
         matplotlib_to_origin(
             fig,
             ax,
@@ -232,16 +232,29 @@ def _run_job(job: dict) -> None:
     exc_holder: list[Exception] = []
     path_holder: list[Path] = []
 
-    def _target() -> None:
-        try:
-            path = _reconstruct_and_run(figure_data, output_dir)
-            path_holder.append(path)
-        except Exception as exc:
-            exc_holder.append(exc)
+    # Origin COM objects have STA thread affinity — all Origin calls must run
+    # in the same thread that first imported originpro.  We therefore run
+    # _reconstruct_and_run directly in the worker thread and use a lightweight
+    # watchdog thread only to kill Origin if the job exceeds MAX_RUNTIME.
+    _job_done = threading.Event()
+    _killed_by_watchdog = threading.Event()
 
-    t = threading.Thread(target=_target, daemon=True)
-    t.start()
-    t.join(timeout=MAX_RUNTIME)
+    def _watchdog() -> None:
+        if _job_done.wait(timeout=MAX_RUNTIME):
+            return  # job finished before timeout
+        _killed_by_watchdog.set()
+        force_restart_origin()
+
+    watchdog = threading.Thread(target=_watchdog, daemon=True)
+    watchdog.start()
+
+    try:
+        path = _reconstruct_and_run(figure_data, output_dir)
+        path_holder.append(path)
+    except Exception as exc:
+        exc_holder.append(exc)
+    finally:
+        _job_done.set()  # signal watchdog that work is done
 
     finished_at = _now()
 
@@ -251,7 +264,7 @@ def _run_job(job: dict) -> None:
         _log(job_id, "Job was cancelled externally")
         return
 
-    if t.is_alive():
+    if _killed_by_watchdog.is_set():
         _log(job_id, f"Timeout after {MAX_RUNTIME}s — restarting Origin")
         force_restart_origin()
         db.update_job(
