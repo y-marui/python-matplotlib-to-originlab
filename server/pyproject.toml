@@ -27,7 +27,7 @@ matplotlib-to-originlab-server = "matplotlib_to_originlab_server.app:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"
-httpx = "^0.24.0"
+httpx = "^0.28.1"
 
 [build-system]
 requires = ["poetry-core"]
