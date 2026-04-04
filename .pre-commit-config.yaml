@@ -62,7 +62,8 @@ repos:
             \.github/|
             \.gitleaks\.toml$|
             \.pre-commit-config\.yaml$|
-            OriginTemplates/
+            OriginTemplates/|
+            Documentation/
           )
 
   # ----------------------------------------------------------------
