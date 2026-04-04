@@ -128,7 +128,7 @@ jobs:
 
       - name: Install packages
         run: |
-          uv pip install --system --no-deps -e remote/ -e server/
+          uv pip install --system -e remote/ -e server/
 
       - name: Verify imports
         run: |
