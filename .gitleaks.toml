@@ -38,12 +38,13 @@ regex       = '''C:\\Users\\[A-Za-z0-9_.\-]+\\'''
 tags        = ["path", "local", "windows"]
 
   [rules.allowlist]
-  description = "Allow docs and example files"
+  description = "Allow docs, example files, and Origin template configs (contain upstream fork author paths)"
   paths = [
     '''\.md$''',
     '''\.txt$''',
     '''\.example$''',
     '''docs/''',
+    '''OriginTemplates/''',
   ]
 
 # ----------------------------------------------------------------
