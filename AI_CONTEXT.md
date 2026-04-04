@@ -1,289 +1,96 @@
-# AI_CONTEXT — matplotlib-to-originlab Remote Execution System
+# AI_CONTEXT — matplotlib-to-originlab
 
-このファイルはAIアシスタントがこのプロジェクトに作業する際に参照する技術仕様書です。
+## Project Overview
 
----
+**Purpose:** matplotlib の Figure を OriginLab グラフに変換するシステム。Origin のインストール状況に応じてローカル実行とリモート実行を自動切替する。
 
-## 1. 目的
+**Tech stack:** Python 3.12 / pyenv + uv / ruff + mypy + pytest / FastAPI / SQLite
 
-異なるOS（Mac / Windows）から、matplotlib-to-originlab-serverを安全かつ再現性高く利用するためのリモート実行基盤を構築する。
-
----
-
-## 2. アーキテクチャ
+**Monorepo structure:**
 
 ```
-[User Code]
-    ↓
-matplotlib-to-originlab (client)
-    ↓ Figure情報を抽出・JSON化
-matplotlib-to-originlab-remote
-    ↓ HTTPS
-matplotlib-to-originlab-server (FastAPI)
-    ↓
-Job DB (SQLite)
-    ↓
-Job Queue
-    ↓
-Worker (Single Thread)
-    ↓
-Origin (COM制御)
-    ↓
-Result Storage (.opju / .pptx)
-    ↓
-clientへ返却
+matplotlib-to-originlab/
+├── client/   matplotlib-to-originlab         ユーザー向けクライアント（全OS）
+├── core/     matplotlib-to-originlab-core    ローカル実行エンジン（Windows + Origin）
+├── remote/   matplotlib-to-originlab-remote  HTTP クライアント（サーバーモード用）
+├── server/   matplotlib-to-originlab-server  Origin 実行ノード（FastAPI, Windows）
+├── tests/    統合テスト
+└── docs/dev-charter/  開発憲章（git subtree）
 ```
 
----
+**Platform split:**
+- Windows のみ: `core/`（originpro + win32com）、`server/`
+- クロスプラットフォーム: `client/`、`remote/`
 
-## 3. 設計方針
-
-- **Originは「単一計算ノード」**: 並列処理禁止、常に1ジョブのみ実行
-- **非同期ジョブ処理**: APIは即時レスポンス、実処理はバックグラウンド
-- **完全なジョブ分離**: 各ジョブは独立ディレクトリ、ファイル共有禁止
-- **再現性保証**: Origin状態のリセット必須、入力・出力・ログを保存
+**Ruff スコープ:** `remote/` と `server/` のみ（`core/`・`client/` は除外）
 
 ---
 
-## 4. 通信仕様
+## Applied Charter Principles
 
-- プロトコル: HTTPS（自己署名証明書）
-- client側: `httpx.post(url, verify=False)` または証明書パスを指定
-- 認証: `Authorization: Bearer <token>`（トークンは環境変数で管理）
+- **Conventional Commits**（feat/fix/docs/chore）でコミットする
+- **変更範囲は必要最小限**（YAGNI）、3 回目の重複で初めて抽象化を検討
+- **コメントは「なぜ」のみ**。コードから自明な処理には書かない
+- **セキュリティ:** secrets はコードに書かず環境変数で管理。`.env` はコミット禁止
+- **CI 必須:** security → lint → test → build の順。`build` job が全集約点
+- **main への直接 push 禁止**。PR 経由でのみマージ
+- **外部公開面は英語必須**（コミットメッセージ・PR・docstring・エラーメッセージ）
 
 ---
 
-## 5. figure_data スキーマ
+## Project-Specific Rules
 
+### Origin の制約（最重要）
+- Origin は「単一計算ノード」: **並列処理禁止**、常に 1 ジョブのみ実行
+- Origin アクセスは常に `threading.Lock()` 内で行う
+- 各ジョブ間で必ず状態リセット（`doc -n;` で新規プロジェクト）
+
+### アーキテクチャ
+```
+[User Code] → client → core（local）or remote（HTTP）
+                              ↓
+                        server（FastAPI）→ Job DB（SQLite）→ Worker → Origin
+```
+
+### API 仕様（server）
+- `POST /job` — ジョブ投入 → `{ "job_id": "uuid" }`
+- `GET /job/{job_id}` — ステータス確認
+- `GET /result/{job_id}` — 結果取得（.opju or .pptx）
+- `POST /job/{job_id}/cancel` — キャンセル
+- 認証: `Authorization: Bearer <token>`（環境変数 `MATPLOTLIB_TO_ORIGINLAB_TOKEN`）
+- 通信: HTTPS（自己署名証明書）、研究室 LAN 内のみを前提
+
+### タイムアウト
+- `MAX_RUNTIME = 300` 秒。超過時は Origin 強制終了 → 再起動 → job → timeout
+
+### figure_data スキーマ
 ```json
 {
-  "graphs": [
-    {
-      "type": "line | scatter | bar",
-      "x": [],
-      "y": [],
-      "title": "",
-      "xlabel": "",
-      "ylabel": "",
-      "xscale": "linear | log",
-      "yscale": "linear | log",
-      "legend": "",
-      "color": "",
-      "linestyle": "solid | dashed | dotted"
-    }
-  ],
+  "graphs": [{ "type": "line|scatter|bar", "x": [], "y": [], "title": "", ... }],
   "output_format": "opju | pptx",
-  "pptx_layout": {
-    "graphs_per_slide": 1
-  }
+  "pptx_layout": { "graphs_per_slide": 1 }
 }
 ```
 
-- `pptx_layout` は `output_format: "pptx"` のときのみ有効
-- `graphs_per_slide` のデフォルトは1
-- 1ジョブ = 複数グラフ = 1.opju（`graphs` 配列で表現）
+### テスト方針
+- Linux CI: respx モック（Origin 不要）でリモート・サーバー HTTP 層をテスト
+- Windows self-hosted: `test-origin` label 付き PR または main push 時のみ実行
 
 ---
 
-## 6. API仕様
+## AI Tool Assignments
 
-### POST /job — ジョブ投入
-
-Request:
-```json
-{ "figure_data": { ... } }
-```
-Response:
-```json
-{ "job_id": "uuid" }
-```
-
-### GET /job/{job_id} — ステータス取得
-
-Response:
-```json
-{
-  "job_id": "uuid",
-  "status": "queued | running | success | failed | timeout | cancelled"
-}
-```
-
-### GET /result/{job_id} — 結果取得
-
-- `output_format: "opju"` → .opjuファイル（バイナリ）
-- `output_format: "pptx"` → .pptxファイル（バイナリ）
-
-### POST /job/{job_id}/cancel — キャンセル
-
-- `queued` → 即キャンセル
-- `running` → Origin強制終了 → 再起動 → cancelled
-
-### GET /queue — キュー確認（運用用）
+- **Claude Code**: アーキテクチャ設計・大規模コード変更・プロジェクトセットアップ
+- **GitHub Copilot**: バグ修正・小規模実装・単体テスト作成
+- **Gemini CLI**: ドキュメント管理（`@AI_CONTEXT.md` で自動読み込み）
 
 ---
 
-## 7. 完了検知（ポーリング）
+## Prohibited Actions
 
-```python
-def wait_for_result(job_id, interval=3, timeout=360):
-    elapsed = 0
-    while elapsed < timeout:
-        status = get_job_status(job_id)
-        if status in ("success", "failed", "timeout", "cancelled"):
-            return status
-        time.sleep(interval)
-        elapsed += interval
-    raise TimeoutError("polling timeout")
-```
-
-- デフォルト間隔: 3秒
-- ポーリングタイムアウト: 360秒（MAX_RUNTIME + バッファ）
-
----
-
-## 8. データ設計
-
-### Jobテーブル（SQLite）
-
-```sql
-CREATE TABLE jobs (
-    id TEXT PRIMARY KEY,
-    status TEXT,
-    created_at TEXT,
-    started_at TEXT,
-    finished_at TEXT,
-    figure_data TEXT,
-    result_path TEXT,
-    error TEXT
-);
-```
-
-### ジョブディレクトリ構造
-
-```
-/jobs/
-  └── {job_id}/
-        ├── input/
-        │     └── figure_data.json
-        ├── output/
-        │     └── result.opju or result.pptx
-        └── log.txt
-```
-
----
-
-## 9. ワーカー仕様
-
-- シングルスレッド、FIFO
-
-```python
-while True:
-    job = fetch_next_job()
-    mark_running(job)
-    try:
-        run_origin(job)
-        mark_success(job)
-    except Timeout:
-        restart_origin()
-        mark_timeout(job)
-    except Exception as e:
-        mark_failed(job, str(e))
-```
-
----
-
-## 10. Origin制御仕様
-
-- 操作方法: COM経由（win32com）
-- 状態リセット（標準）: `doc -s;`（LabTalk）
-- 状態リセット（障害時）: Origin再起動
-
-| 方法 | 安定性 | 速度 | 使用タイミング |
-|------|--------|------|----------------|
-| 毎回再起動 | ◎ | × | 障害時のみ |
-| 新規プロジェクト | ○ | ◎ | 標準 |
-
----
-
-## 11. タイムアウト・排他制御
-
-```python
-MAX_RUNTIME = 300  # 秒
-lock = threading.Lock()
-```
-
-- タイムアウト超過時: Origin強制終了 → 再起動 → job → timeout
-- Originアクセスは常にロック内
-
----
-
-## 12. サーバー起動時の復元
-
-```python
-@app.on_event("startup")
-async def recover_jobs():
-    db.execute("UPDATE jobs SET status='queued' WHERE status='running'")
-```
-
----
-
-## 13. ログ設計
-
-```json
-{
-  "job_id": "...",
-  "status": "success",
-  "execution_time": 12.3,
-  "error": null
-}
-```
-
-- 保存先: 各ジョブディレクトリ（log.txt）+ DBに概要保存
-
----
-
-## 14. 障害対策
-
-| 障害 | 対策 |
-|------|------|
-| Originフリーズ | watchdogで検知 → 強制kill → 再起動 |
-| サーバー再起動 | 起動時に `running → queued` へ復元 |
-| ディスク肥大化 | 定期削除（7日）— トリガーは後回し |
-
----
-
-## 15. セキュリティ
-
-- 前提: 研究室LAN内のみ利用
-- HTTPS（自己署名証明書）
-- APIキー認証（環境変数で管理）
-- IP制限（推奨）
-
----
-
-## 16. 運用ルール
-
-- 最大実行時間: 300秒
-- 定期再起動（1日1回推奨）
-
----
-
-## 17. リスク評価
-
-| リスク | 対策 |
-|--------|------|
-| Origin不安定 | 再起動 |
-| ジョブ詰まり | タイムアウト |
-| 再現性崩壊 | 状態リセット |
-| データ競合 | ディレクトリ分離 |
-| 通信傍受 | HTTPS |
-
----
-
-## 18. 将来拡張（後回し）
-
-- RedisによるQueue強化
-- Web UI
-- ジョブ優先度制御
-- 分散Origin（複数Windows）
-- 入力サイズ制限
+- secrets・認証情報のコードへのハードコード / コミット
+- `.env` ファイルのコミット（`.env.example` はコミット可）
+- ローカル絶対パスのソースコードへのハードコード
+- Origin への並列アクセス
+- `main` への直接 push
+- AI との会話ログのコミット

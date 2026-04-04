@@ -13,6 +13,20 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # Security scan (pre-commit / gitleaks)
+  # ---------------------------------------------------------------------------
+  security:
+    name: Security scan (pre-commit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks requires full history
+
+      - uses: pre-commit/action@v3.0.1
+
+  # ---------------------------------------------------------------------------
   # Lint & type check (Linux, no Origin required)
   # ---------------------------------------------------------------------------
   lint:
@@ -91,6 +105,35 @@ jobs:
 
       - name: pytest — server (HTTP layer)
         run: pytest server/tests/ -v --tb=short
+
+  # ---------------------------------------------------------------------------
+  # Build — installability check (aggregates all required jobs)
+  # This is the single status check required by the branch ruleset.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build (installability check)
+    needs: [security, lint, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install packages
+        run: |
+          uv pip install --system --no-deps -e remote/ -e server/
+
+      - name: Verify imports
+        run: |
+          python -c "import matplotlib_to_originlab_remote"
+          python -c "import matplotlib_to_originlab_server"
 
   # ---------------------------------------------------------------------------
   # Tests — Windows + OriginLab (self-hosted, optional)
