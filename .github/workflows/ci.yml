@@ -146,8 +146,32 @@ jobs:
     if: |
       github.event_name == 'push' ||
       contains(github.event.pull_request.labels.*.name, 'test-origin')
+    concurrency:
+      group: originlab-windows
+      cancel-in-progress: false
 
     steps:
+      - name: Wait until Origin is free
+        shell: pwsh
+        run: |
+          $processName   = "Origin64"
+          $timeoutMinutes = 120
+          $pollSeconds   = 15
+          $deadline = (Get-Date).AddMinutes($timeoutMinutes)
+
+          while ((Get-Date) -lt $deadline) {
+            $p = Get-Process -Name $processName -ErrorAction SilentlyContinue
+            if (-not $p) {
+              Write-Host "$processName.exe is not running. Continue."
+              exit 0
+            }
+            Write-Host "$processName.exe is running (PID(s): $($p.Id -join ', ')). Waiting $pollSeconds s..."
+            Start-Sleep -Seconds $pollSeconds
+          }
+
+          Write-Error "Timeout: $processName.exe is still running after $timeoutMinutes minutes."
+          exit 1
+
       - uses: actions/checkout@v6
 
       - name: Set up Python
