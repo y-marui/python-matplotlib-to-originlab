@@ -4,6 +4,7 @@
 > 英語版（参照）は [README.md](README.md) を参照してください。
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
+[![check-charter CI](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml)
 
 AI支援ソフトウェアプロジェクトのための共有開発憲章。
 
@@ -58,7 +59,9 @@ docs/dev-charter/ 内の全ファイルを読み、このプロジェクトを�
 1. docs/dev-charter/AI_TOOL_SETUP.md の仕様に従い AI コンテキストファイルをセットアップする
 2. 憲章の要件とプロジェクトの現状を照合し、未対応箇所をすべて特定・修正する
    （ファイル構成・CI・セキュリティ・ドキュメント・ライセンス・コーディング規約など、プロジェクト全体を対象とする）
-3. docs/dev-charter/topics/GITHUB_SETTINGS.md を読み、gh コマンドで適用できるリポジトリ設定を実行する
+3. docs/dev-charter/topics/PROJECT_README_GUIDELINES.md を読み、プロジェクトの README を検証・更新する
+   （テンプレート形式の README はプロジェクト形式に再フォーマットし、存在しない場合は新規作成する）
+4. docs/dev-charter/topics/GITHUB_SETTINGS.md を読み、gh コマンドで適用できるリポジトリ設定を実行する
 
 - 不明点・確認事項は作業前に 1 回まとめて質問する
 - 憲章と既存規約が矛盾する場合は矛盾点を列挙し、優先順位をユーザーに確認してから進める
@@ -101,7 +104,8 @@ docs/dev-charter/ 内の全ファイルを読み、憲章の変更が影響す�
 
 1. docs/dev-charter/AI_TOOL_SETUP.md の仕様に従い AI コンテキストファイルを更新する
 2. 憲章の変更がプロジェクト全体（CI・セキュリティ・ドキュメント・ライセンス等）に与える影響を確認し修正する
-3. docs/dev-charter/topics/GITHUB_SETTINGS.md を読み、gh コマンドで適用できる設定変更を実行する
+3. docs/dev-charter/topics/PROJECT_README_GUIDELINES.md を読み、プロジェクトの README を変更内容に合わせて更新する
+4. docs/dev-charter/topics/GITHUB_SETTINGS.md を読み、gh コマンドで適用できる設定変更を実行する
 
 - AI_CONTEXT.md が存在しない場合はインストール用プロンプトを使うこと
 - 憲章の変更がプロジェクト固有ルールと矛盾する場合は矛盾点を列挙してユーザーに確認する
@@ -126,6 +130,9 @@ docs/dev-charter/ 内の各ファイルを1つずつ読み直し、プロジェ�
 
 ```
 update-charter:
+	git remote | grep -q '^dev-charter$$' || \
+	  git remote add dev-charter https://github.com/y-marui/dev-charter
+	git fetch dev-charter
 	git subtree pull --prefix=docs/dev-charter dev-charter main --squash
 ```
 
@@ -135,7 +142,7 @@ update-charter:
 毎週自動で最新バージョンを確認し、古い場合は update PR を作成します。
 
 ```yaml
-name: check-dev-charter
+name: Dev Charter
 on:
   schedule:
     - cron: "23 3 * * 1"  # 毎週月曜 3:23 UTC
@@ -143,7 +150,10 @@ on:
 
 jobs:
   check:
+    name: Check
     uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+    with:
+      fail_if_outdated: true
     permissions:
       contents: write
       pull-requests: write
@@ -152,6 +162,26 @@ jobs:
 > **Note:** Branch Protection で direct push が禁止されている場合は、
 > GitHub Actions bot の bypass rule を追加してください
 > （Settings > Rules > Rulesets > Bypass list > GitHub Actions）。
+
+## Badge for Adopting Projects
+
+プロジェクトの README にこのバッジを追加すると、dev-charter の更新状態を可視化できます。
+
+### Workflow Status Badge
+
+dev-charter が最新かどうかを表示します。バッジが機能するには上記ワークフローに `fail_if_outdated: true` が必要です。
+
+```markdown
+[![Charter Check](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml)
+```
+
+`{owner}` と `{repo}` を自分のリポジトリのオーナー名・リポジトリ名に置き換えてください。
+
+| 状態 | Status Badge |
+|---|---|
+| 未導入 / CI 未設定 | 赤（VERSION not found） |
+| 導入済み・最新 | 緑 |
+| 導入済み・更新必要 | 赤 |
 
 ---
 

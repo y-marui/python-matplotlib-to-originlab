@@ -1,10 +1,19 @@
 # Reusable workflow: check if dev-charter is up to date and open a PR if not.
 #
-# Usage in your project:
+# Usage in your project (.github/workflows/dev-charter-check.yml):
+#
+#   name: Dev Charter
+#   on:
+#     schedule:
+#       - cron: "23 3 * * 1"  # Every Monday at 03:23 UTC
+#     workflow_dispatch:
 #
 #   jobs:
 #     check:
+#       name: Check
 #       uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+#       with:
+#         fail_if_outdated: true
 #       permissions:
 #         contents: write
 #         pull-requests: write
@@ -22,6 +31,23 @@ on:
         description: "Path to the dev-charter subtree within the project"
         default: "docs/dev-charter"
         type: string
+      fail_if_outdated:
+        description: "Exit with code 1 when dev-charter needs an update (makes CI badge turn red)"
+        default: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      prefix:
+        description: "Path to the dev-charter subtree within the project"
+        default: "."
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/check-charter.yml"
+      - "VERSION"
+  schedule:
+    - cron: "40 3 * * 1"  # Every Monday at 03:40 UTC
 
 jobs:
   check:
@@ -39,6 +65,9 @@ jobs:
       - name: Check VERSION
         id: versions
         run: |
+          PREFIX="${{ inputs.prefix }}"
+          PREFIX="${PREFIX:-"."}"
+
           REMOTE=$(curl -sf --max-time 10 \
             "https://raw.githubusercontent.com/y-marui/dev-charter/main/VERSION" \
             | head -1)
@@ -47,15 +76,16 @@ jobs:
             exit 1
           fi
 
-          LOCAL=$(head -1 "${{ inputs.prefix }}/VERSION" 2>/dev/null || echo "")
+          LOCAL=$(head -1 "${PREFIX}/VERSION" 2>/dev/null || echo "")
           if [ -z "$LOCAL" ]; then
-            echo "::error::Local VERSION not found at ${{ inputs.prefix }}/VERSION"
+            echo "::error::Local VERSION not found at ${PREFIX}/VERSION"
             exit 1
           fi
 
           echo "local:  ${LOCAL}"
           echo "remote: ${REMOTE}"
           echo "remote=${REMOTE}" >> "$GITHUB_OUTPUT"
+          echo "prefix=${PREFIX}" >> "$GITHUB_OUTPUT"
 
           if [ "$LOCAL" = "$REMOTE" ]; then
             echo "dev-charter is up to date"
@@ -73,7 +103,7 @@ jobs:
           set -euo pipefail
           REMOTE="${{ steps.versions.outputs.remote }}"
           BRANCH="update-charter"
-          PREFIX="${{ inputs.prefix }}"
+          PREFIX="${{ steps.versions.outputs.prefix }}"
 
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
@@ -99,6 +129,8 @@ jobs:
           REMOTE="${{ steps.versions.outputs.remote }}"
           CHECKLIST_URL="https://github.com/y-marui/dev-charter/blob/main/UPDATE_CHECKLIST.md"
 
+          gh label create "dev-charter" --color "#0075ca" --description "dev-charter update" --force
+
           gh pr create \
             --title "chore: update dev-charter to ${REMOTE}" \
             --body "$(cat <<EOF
@@ -110,4 +142,11 @@ jobs:
           )" \
             --base main \
             --head update-charter \
-            --label "dev-charter" 2>/dev/null || true
+            --label "dev-charter" || \
+            gh pr list --head update-charter --base main --json number --jq length | grep -q '^[1-9]'
+
+      - name: Fail if outdated
+        if: steps.versions.outputs.outdated == 'true' && inputs.fail_if_outdated
+        run: |
+          echo "::error::dev-charter is outdated. Merge the update PR to resolve."
+          exit 1
