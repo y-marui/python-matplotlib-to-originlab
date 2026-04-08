@@ -3,6 +3,7 @@
 > **このファイルは正本（日本語版）です。**
 > 英語版（参照）は [README.md](README.md) を参照してください。
 
+[![Charter Check](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml)
 [![CI](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
