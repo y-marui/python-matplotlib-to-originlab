@@ -3,6 +3,7 @@
 > **This is the reference (English) version.**
 > The canonical (Japanese) version is [README-jp.md](README-jp.md).
 
+[![Charter Check](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml)
 [![CI](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 

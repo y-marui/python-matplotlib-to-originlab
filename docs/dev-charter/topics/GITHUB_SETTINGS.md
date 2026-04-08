@@ -34,13 +34,14 @@ Rules:
 ☑ Require a pull request before merging
   └ Required approvals: 0（個人開発）/ 1 以上（複数人）
 ☑ Require status checks to pass before merging
-  └ Status checks: build  ← build が追加されているか確認
+  └ Status checks: Build (GitHub Actions)  ← job name と GitHub Actions ソースを確認
+     ※ job name に説明がある場合は "Build (installability check)" 等、実際の名前で登録する
 ☑ Require conversation resolution before merging
 ☑ Block force pushes
 ☑ Restrict deletions
 ```
 
-Ruleset の仕様は [topics/CI_POLICY.md](CI_POLICY.md) を参照。
+> **Status check の名前とソースについて：** job `name` フィールドの値（例：`Build`）がチェック名になる。ソースは `GitHub Actions` を指定する（`Any source` にしない）。詳細は [topics/CI_POLICY.md](CI_POLICY.md) を参照。
 
 ## Sponsors (FUNDING.yml)
 

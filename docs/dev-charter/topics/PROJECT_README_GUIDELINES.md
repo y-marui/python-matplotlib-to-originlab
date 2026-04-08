@@ -127,6 +127,14 @@ README のライセンスセクション・ライセンスバッジは選択し�
 
 バッジは**言語宣言の直後**（§1 位置 3）に配置する。
 
+**dev-charter バッジ（dev-charter を導入済みの場合）:**
+
+```
+[![Charter Check](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml)
+```
+
+`{user}` / `{repo}` をこのプロジェクトのリポジトリ情報に置き換える。
+
 **CI バッジ:**
 
 ```
@@ -186,6 +194,7 @@ README 作成・更新後に確認する。⚠️ は人間による確認が必
 ```
 [ ] 必須セクション（§1）が全て存在し、順序通りか
 [ ] CI バッジの URL がこのプロジェクトリポジトリを指しているか（テンプレートの URL のままになっていないか）
+[ ] dev-charter を導入済みの場合、charter-check バッジが存在するか（§7 参照）
 [ ] ライセンスバッジ・READMEライセンスセクション・LICENSE ファイルが三者一致しているか
 [ ] ⚠️ 一行概要がテンプレートの説明ではなくプロジェクト固有の説明になっているか
 [ ] ⚠️ セットアップ手順でプロジェクトが実際に動作するか（人間による動作確認）
