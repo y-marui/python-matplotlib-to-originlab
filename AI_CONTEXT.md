@@ -12,10 +12,24 @@ dev-charter の本体。他プロジェクトが `git subtree` で取り込む�
 
 - **正本は日本語**。英語版（README.md）は翻訳。日本語版と英語版は同一コミットで更新する
 - **Conventional Commits**（feat/fix/docs/chore）でコミットする
-- **コミット前に `VERSION` を今日の日付（`YYYY-MM-DD`）に更新する**。pre-commit フックが自動検証する
+- **コミット前に `VERSION` を今日の日付（`YYYY-MM-DD`）に更新する**。1日に複数回リリースしない（日付がバージョン識別子のため）。pre-commit フックが自動検証する
+  - ローカルの更新コマンド：`UPDATE=1 bash scripts/check-version-date.sh`（`VERSION` を更新）
+  - **クラウド/エージェント環境**：ローカルの pre-commit フックが動作しない。CI の自動更新ワークフロー（`.github/workflows/update-version.yml`）が `VERSION` を自動的に更新してコミットするため、漏れた場合は CI が補完する。エージェントは可能な限り手動で VERSION を更新するのが望ましい
 - **新規ドキュメントを追加するとき**は両言語の README のドキュメント一覧テーブルも更新する
 - **憲章に追加できる原則・ルール**は複数の異なるプロジェクトに適用できるものに限る（1プロジェクト固有のルールは不可）
 - **dev-charter 全ドキュメントのセクションヘッダ**：日本語ドキュメントでも英語で記載する
+
+## CI Workflows
+
+このリポジトリには以下の GitHub Actions ワークフローが存在する：
+
+| ファイル | 目的 |
+|---|---|
+| `.github/workflows/ci.yml` | PR・main push に対して `pre-commit run --all-files` を実行し、`check-version-date` 等のフックを強制する |
+| `.github/workflows/update-version.yml` | 非フォーク PR で `VERSION` が古い場合に自動更新コミットを行う（cloud/agent 対応） |
+| `.github/workflows/check-charter.yml` | 採用先プロジェクトから呼び出す再利用可能ワークフロー（dev-charter 本体の CI ではない） |
+
+`ci.yml` の `Build` ジョブが Branch Protection の必須ステータスチェックとして機能する。
 
 ## Security Hooks
 

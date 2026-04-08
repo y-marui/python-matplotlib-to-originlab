@@ -142,6 +142,14 @@ AGPL/GPL/LGPL を採用する場合の準 CLA 設定（`CONTRIBUTING.md` + PR �
 
 バッジは**言語宣言の直後**（§5.2 位置 3）に配置する。テンプレートリポジトリ固有の URL・ライセンス種別に合わせて記述すること。
 
+**dev-charter バッジ（dev-charter を導入済みの場合）:**
+
+```
+[![Charter Check](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{user}/{repo}/actions/workflows/dev-charter-check.yml)
+```
+
+`{user}` / `{repo}` をこのテンプレートリポジトリのリポジトリ情報に置き換える。
+
 **CI バッジ:**
 
 ```
@@ -205,6 +213,7 @@ README 作成後、以下を確認する。
 [ ] 言語宣言が主言語（日本語 / 英語）と一致しているか
 [ ] セクションヘッダが英語か（日本語文書でも）
 [ ] CI バッジの URL がこのテンプレートリポジトリを指しているか
+[ ] dev-charter を導入済みの場合、charter-check バッジが存在するか（§5.3 参照）
 [ ] ライセンスバッジが §4 のライセンス選択と一致しているか
 [ ] メタ情報テーブルに開発対象・開発環境・主言語・ライセンスの 4 フィールドがあるか
 [ ] 特徴セクションが 5〜8 項目か
