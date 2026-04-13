@@ -15,6 +15,7 @@ and development rules used across projects.
 
 | File | Description |
 |---|---|
+| [CHARTER_INDEX.md](CHARTER_INDEX.md) | Charter document index (topic-to-file lookup table for efficient reference) |
 | [PRINCIPLES.md](PRINCIPLES.md) | Development philosophy, design and architecture principles |
 | [CODE_STYLE.md](CODE_STYLE.md) | Code style guide |
 | [AI_COLLABORATION_RULES.md](AI_COLLABORATION_RULES.md) | AI collaboration rules and role assignments |
@@ -32,6 +33,8 @@ and development rules used across projects.
 | [topics/GITHUB_CONTRIBUTING.md](topics/GITHUB_CONTRIBUTING.md) | Issue, PR, CONTRIBUTING.md, PR template, and Quasi-CLA (for OSS) |
 | [topics/TEMPLATE_README_GUIDELINES.md](topics/TEMPLATE_README_GUIDELINES.md) | GitHub template repository README guidelines (environment, language, LICENSE, required sections) |
 | [topics/PROJECT_README_GUIDELINES.md](topics/PROJECT_README_GUIDELINES.md) | README setup guide for projects created from a template |
+| [topics/PYTHON_DEV_ENV.md](topics/PYTHON_DEV_ENV.md) | Python development environment (pyenv, uv, ruff, mypy, pytest) |
+| [topics/PYTHON_CLI.md](topics/PYTHON_CLI.md) | Python CLI implementation (typer, pydantic-settings, XDG config) |
 
 ## How to Use
 
@@ -41,6 +44,20 @@ and development rules used across projects.
 
 See [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) for the structure spec.
 
+## Quick Install
+
+Run from your project root:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
+```
+
+The script automates the git subtree setup and, if Claude Code is available,
+guides you through the initial setup (INSTALL_CHECKLIST).
+
+> **Note:** To customize the install path or branch, use environment variables:
+> `CHARTER_PREFIX=path/to/charter bash <(curl -fsSL .../install.sh)`
+
 ## Install (git subtree)
 
 ```
@@ -49,38 +66,10 @@ git fetch dev-charter
 git subtree add --prefix=docs/dev-charter dev-charter main --squash
 ```
 
-After installing, paste the following prompts into your AI tool in order:
-
-**Step 1 — bulk setup**
+After installing, paste the following prompt into your AI tool:
 
 ```
-Read all files in docs/dev-charter/, explore this project, then do the following:
-
-1. Set up AI context files following the spec in docs/dev-charter/AI_TOOL_SETUP.md
-2. Compare the project against charter requirements and fix all gaps
-   (cover the entire project: file structure, CI, security, docs, license, coding conventions, etc.)
-3. Read docs/dev-charter/topics/PROJECT_README_GUIDELINES.md and validate the project README against it
-   (if the README is template-style, reformat to project format; if it doesn't exist, create it)
-4. Read docs/dev-charter/topics/GITHUB_SETTINGS.md and apply any repository settings that can be configured via gh commands
-
-- If you have questions or ambiguities, ask all of them at once before starting
-- If the charter conflicts with existing conventions, list the conflicts and confirm priority with the user before proceeding
-- For large-scope changes, confirm with the user before proceeding
-- Do not commit after completing (let the user review first)
-```
-
-**Step 2 — file-by-file review**
-
-```
-Re-read each file in docs/dev-charter/ one at a time and verify that the project fully reflects it.
-
-For each file in order:
-1. Read the file
-2. Check the corresponding project files and settings
-3. Fix anything that is missing or incomplete
-
-- Re-check items already addressed in Step 1
-- Do not commit after completing (let the user review first)
+Run docs/dev-charter/INSTALL_CHECKLIST.md
 ```
 
 ## Update
@@ -89,41 +78,31 @@ If the `dev-charter` remote is not set up (e.g., after cloning the project), add
 
 ```
 git remote add dev-charter https://github.com/y-marui/dev-charter
-```
-
-```
 git subtree pull --prefix=docs/dev-charter dev-charter main --squash
 ```
 
-After updating, paste the following prompts into your AI tool in order:
+> **Note (projects created from a template repository):**
+> GitHub templates copy files only — git history is not carried over — so `git subtree pull` will fail.
+> The `check-charter.yml` workflow detects this automatically and handles it.
+> For manual updates, use the following instead of `git subtree pull`:
+> ```bash
+> git remote add dev-charter https://github.com/y-marui/dev-charter || true
+> git fetch dev-charter
+> SPLIT=$(git rev-parse dev-charter/main)
+> rm -rf docs/dev-charter/
+> mkdir -p docs/dev-charter/
+> git archive dev-charter/main | tar -x -C docs/dev-charter/
+> git add docs/dev-charter/
+> git commit -m "Squashed 'docs/dev-charter/' content from commit ${SPLIT}
+>
+> git-subtree-dir: docs/dev-charter
+> git-subtree-split: ${SPLIT}"
+> ```
 
-**Step 1 — bulk update**
+After updating, paste the following prompt into your AI tool:
 
 ```
-Read all files in docs/dev-charter/ and update the project to reflect charter changes:
-
-1. Update AI context files following the spec in docs/dev-charter/AI_TOOL_SETUP.md
-2. Review the impact of charter changes on the entire project (CI, security, docs, license, etc.) and fix as needed
-3. Read docs/dev-charter/topics/PROJECT_README_GUIDELINES.md and update the project README to reflect any changes
-4. Read docs/dev-charter/topics/GITHUB_SETTINGS.md and apply any setting changes that can be configured via gh commands
-
-- If AI_CONTEXT.md does not exist, use the install prompt instead
-- If a charter change conflicts with a project-specific rule, list the conflicts and confirm priority with the user
-- Do not commit after completing (let the user review first)
-```
-
-**Step 2 — file-by-file review**
-
-```
-Re-read each file in docs/dev-charter/ one at a time and verify that the project fully reflects it.
-
-For each file in order:
-1. Read the file
-2. Check the corresponding project files and settings
-3. Fix anything that is missing or incomplete
-
-- Re-check items already addressed in Step 1
-- Do not commit after completing (let the user review first)
+Run docs/dev-charter/UPDATE_CHECKLIST.md
 ```
 
 ## Makefile helper
@@ -145,7 +124,7 @@ check for updates weekly and open a PR when a new version is available.
 name: Dev Charter
 on:
   schedule:
-    - cron: "23 3 * * 1"  # Every Monday at 03:23 UTC
+    - cron: "23 3 * * 1"  # Every Monday at 03:23 UTC — change to your own random minute/hour/day-of-week
   workflow_dispatch:
 
 jobs:

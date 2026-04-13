@@ -1,28 +1,8 @@
 # Reusable workflow: check if dev-charter is up to date and open a PR if not.
 #
-# Usage in your project (.github/workflows/dev-charter-check.yml):
-#
-#   name: Dev Charter
-#   on:
-#     schedule:
-#       - cron: "23 3 * * 1"  # Every Monday at 03:23 UTC
-#     workflow_dispatch:
-#
-#   jobs:
-#     check:
-#       name: Check
-#       uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
-#       with:
-#         fail_if_outdated: true
-#       permissions:
-#         contents: write
-#         pull-requests: write
-#
-# NOTE: If your repository has Branch Protection rules that prevent direct pushes,
-# you may need to add a bypass rule for the GitHub Actions bot
-# (Settings > Rules > Rulesets > Bypass list > Add bypass > GitHub Actions).
+# For setup instructions, see "Version Check (CI)" in README.md.
 
-name: check-charter
+name: Dev Charter
 
 on:
   workflow_call:
@@ -58,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout (full history required for git subtree)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -113,11 +93,25 @@ jobs:
 
           git checkout -B "${BRANCH}" origin/main
 
-          git subtree pull \
-            --prefix="${PREFIX}" \
-            dev-charter main \
-            --squash \
-            -m "chore: update dev-charter to ${REMOTE}"
+          if ! git subtree pull \
+              --prefix="${PREFIX}" \
+              dev-charter main \
+              --squash \
+              -m "chore: update dev-charter to ${REMOTE}"; then
+            # Fallback: template project (no subtree history)
+            # Clean up any partial state from the failed attempt
+            git reset --hard HEAD
+            git clean -fd "${PREFIX}/"
+
+            SPLIT=$(git rev-parse dev-charter/main)
+            rm -rf "${PREFIX}/"
+            mkdir -p "${PREFIX}"
+            git archive dev-charter/main | tar -x -C "${PREFIX}/"
+            git add "${PREFIX}/"
+
+            git commit -m "$(printf "Squashed '%s/' content from commit %s\n\ngit-subtree-dir: %s\ngit-subtree-split: %s" \
+              "${PREFIX}" "${SPLIT}" "${PREFIX}" "${SPLIT}")"
+          fi
 
           git push origin "${BRANCH}" --force-with-lease
 
@@ -127,7 +121,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           REMOTE="${{ steps.versions.outputs.remote }}"
-          CHECKLIST_URL="https://github.com/y-marui/dev-charter/blob/main/UPDATE_CHECKLIST.md"
+          UPDATE_CHECKLIST_URL="https://github.com/y-marui/dev-charter/blob/main/UPDATE_CHECKLIST.md"
+          INSTALL_CHECKLIST_URL="https://github.com/y-marui/dev-charter/blob/main/INSTALL_CHECKLIST.md"
 
           gh label create "dev-charter" --color "#0075ca" --description "dev-charter update" --force
 
@@ -137,7 +132,9 @@ jobs:
           ## dev-charter を ${REMOTE} に更新
 
           \`git subtree pull\` を自動的に適用しました。
-          マージ後、[更新チェックリスト](${CHECKLIST_URL}) に従って対応してください。
+          マージ後、[更新チェックリスト](${UPDATE_CHECKLIST_URL}) に従って変更のあった箇所を対応してください。
+
+          > 全ファイルを網羅的に確認したい場合は [インストールチェックリスト](${INSTALL_CHECKLIST_URL}) を使用してください。
           EOF
           )" \
             --base main \
