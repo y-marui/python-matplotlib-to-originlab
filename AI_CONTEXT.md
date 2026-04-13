@@ -28,6 +28,8 @@ matplotlib-to-originlab/
 
 ## Applied Charter Principles
 
+憲章参照: `docs/dev-charter/CHARTER_INDEX.md` でトピックを特定してから該当ファイルのみ読む
+
 - **Conventional Commits**（feat/fix/docs/chore）でコミットする
 - **変更範囲は必要最小限**（YAGNI）、3 回目の重複で初めて抽象化を検討
 - **コメントは「なぜ」のみ**。コードから自明な処理には書かない
