@@ -1,10 +1,26 @@
 # AI_CONTEXT — matplotlib-to-originlab
 
+## Reference Order
+
+AI はタスク開始時に以下の順で参照する:
+
+1. `README-jp.md`（概要・セットアップ）
+2. `DEVELOPING.md`（ビルド・実装規約・命名規則）※未作成の場合は AI_CONTEXT.md の Project-Specific Rules を参照
+
+必要に応じて以下を参照する（順不同）:
+- `CONTRIBUTING.md`（PR・Issue ルール）
+- `docs/architecture.md`（モジュール・コンポーネント構造）
+- `docs/file-map.md`（ファイルレベルの依存関係 ※情報が足りない・古い場合は適宜探索し、追記・更新する）
+- `docs/specification.md`（機能仕様・データフロー）
+- `docs/ui-design.md`（UI 設計・コンポーネント仕様）
+
+---
+
 ## Project Overview
 
 **Purpose:** matplotlib の Figure を OriginLab グラフに変換するシステム。Origin のインストール状況に応じてローカル実行とリモート実行を自動切替する。
 
-**Tech stack:** Python 3.12 / pyenv + uv / ruff + mypy + pytest / FastAPI / SQLite
+**Tech stack:** Python 3.13 / pyenv + uv / ruff + mypy + pytest / FastAPI / SQLite
 
 **Monorepo structure:**
 
@@ -15,6 +31,7 @@ matplotlib-to-originlab/
 ├── remote/   matplotlib-to-originlab-remote  HTTP クライアント（サーバーモード用）
 ├── server/   matplotlib-to-originlab-server  Origin 実行ノード（FastAPI, Windows）
 ├── tests/    統合テスト
+├── docs/     アーキテクチャ・仕様・ファイルマップ等
 └── docs/dev-charter/  開発憲章（git subtree）
 ```
 
@@ -37,6 +54,13 @@ matplotlib-to-originlab/
 - **CI 必須:** security → lint → test → build の順。`build` job が全集約点
 - **main への直接 push 禁止**。PR 経由でのみマージ
 - **外部公開面は英語必須**（コミットメッセージ・PR・docstring・エラーメッセージ）
+
+---
+
+## Document Sync Rule
+
+仕様・ルール・構成に変更が生じたとき、変更と同じ作業内で関連ドキュメントを更新する。
+対象は docs/ 内のファイルに限らず、AI_CONTEXT.md・README.md 等のルートファイルも含む。
 
 ---
 
@@ -96,3 +120,4 @@ matplotlib-to-originlab/
 - Origin への並列アクセス
 - `main` への直接 push
 - AI との会話ログのコミット
+- `docs/dev-charter/` 配下のファイルの直接編集（変更は dev-charter リポジトリ本体に Issue を立て `git subtree pull` で取り込む）

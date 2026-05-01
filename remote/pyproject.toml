@@ -11,7 +11,7 @@ packages = [{include = "matplotlib_to_originlab_remote"}]
 # Used by matplotlib-to-originlab when OriginLab is not available locally.
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 httpx = "^0.28.1"
 
 [tool.poetry.group.dev.dependencies]
