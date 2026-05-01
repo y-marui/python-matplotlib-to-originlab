@@ -15,7 +15,7 @@ packages = [{include = "matplotlib_to_originlab"}]
 # matplotlib-to-originlab-server instance (remote mode).
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 matplotlib = "^3.6.3"
 matplotlib-to-originlab-remote = {path = "../remote"}
 # Core is only installed on Windows; on other platforms the remote backend is used.

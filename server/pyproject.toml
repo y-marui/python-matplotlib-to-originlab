@@ -13,7 +13,7 @@ packages = [{include = "matplotlib_to_originlab_server"}]
 # Windows + OriginLab required.
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 matplotlib-to-originlab-core = {path = "../core"}
 # Web framework (planned — see ROADMAP.md)
 fastapi = {version = ">=0.135.3,<0.137.0", optional = true}
