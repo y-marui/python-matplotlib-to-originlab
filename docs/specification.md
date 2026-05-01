@@ -2,7 +2,7 @@
 
 ## Overview
 
-matplotlib の Figure を OriginLab グラフに変換する。  
+matplotlib の Figure を OriginLab グラフに変換する。
 Origin のインストール状況に応じてローカル実行（core）またはリモート実行（remote → server）を自動選択する。
 
 ---
