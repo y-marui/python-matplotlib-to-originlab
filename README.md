@@ -6,6 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml)
 [![Charter Check](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/y-marui?style=social)](https://github.com/sponsors/y-marui)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/y.marui)
 
 Convert matplotlib figures to OriginLab graphs — automatically choosing local
 or remote execution depending on whether OriginLab is available.

@@ -40,6 +40,13 @@ matplotlib-to-originlab/
 
 ---
 
+## Document Sync Rule
+
+仕様・ルール・構成に変更が生じたとき、変更と同じ作業内で関連ドキュメントを更新する。
+対象は docs/ 内のファイルに限らず、AI_CONTEXT.md・README.md 等のルートファイルも含む。
+
+---
+
 ## Project-Specific Rules
 
 ### Origin の制約（最重要）
@@ -96,3 +103,4 @@ matplotlib-to-originlab/
 - Origin への並列アクセス
 - `main` への直接 push
 - AI との会話ログのコミット
+- `docs/dev-charter/` 配下のファイルの直接編集（変更は dev-charter リポジトリ本体に Issue を立て `git subtree pull` で取り込む）
