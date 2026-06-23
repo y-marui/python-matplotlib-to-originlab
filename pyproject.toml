@@ -63,7 +63,7 @@ ignore = [
 # ---------------------------------------------------------------------------
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.13"
 ignore_missing_imports = true
 # Keep strict checking off for now; tighten per-package as needed.
 warn_unused_ignores = false
