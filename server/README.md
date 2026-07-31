@@ -68,9 +68,11 @@ On the client machine, point matplotlib-to-originlab at this server:
 
 ```python
 from matplotlib_to_originlab_remote import configure
+
 configure(server_url="https://<server-ip>:8719", token="your-token")
 
 import matplotlib_to_originlab as mto
+
 mto.run(fig, ax, mode="remote")
 ```
 
