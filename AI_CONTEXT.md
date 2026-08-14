@@ -66,19 +66,19 @@ matplotlib-to-originlab/
 
 ## Project-Specific Rules
 
-### Origin の制約（最重要）
+### Origin Constraints (Critical)
 - Origin は「単一計算ノード」: **並列処理禁止**、常に 1 ジョブのみ実行
 - Origin アクセスは常に `threading.Lock()` 内で行う
 - 各ジョブ間で必ず状態リセット（`doc -n;` で新規プロジェクト）
 
-### アーキテクチャ
+### Architecture
 ```
 [User Code] → client → core（local）or remote（HTTP）
                               ↓
                         server（FastAPI）→ Job DB（SQLite）→ Worker → Origin
 ```
 
-### API 仕様（server）
+### API Specification (server)
 - `POST /job` — ジョブ投入 → `{ "job_id": "uuid" }`
 - `GET /job/{job_id}` — ステータス確認
 - `GET /result/{job_id}` — 結果取得（.opju or .pptx）
@@ -86,10 +86,10 @@ matplotlib-to-originlab/
 - 認証: `Authorization: Bearer <token>`（環境変数 `MATPLOTLIB_TO_ORIGINLAB_TOKEN`）
 - 通信: HTTPS（自己署名証明書）、研究室 LAN 内のみを前提
 
-### タイムアウト
+### Timeout
 - `MAX_RUNTIME = 300` 秒。超過時は Origin 強制終了 → 再起動 → job → timeout
 
-### figure_data スキーマ
+### figure_data Schema
 ```json
 {
   "graphs": [{ "type": "line|scatter|bar", "x": [], "y": [], "title": "", ... }],
@@ -98,7 +98,7 @@ matplotlib-to-originlab/
 }
 ```
 
-### テスト方針
+### Test Policy
 - Linux CI: respx モック（Origin 不要）でリモート・サーバー HTTP 層をテスト
 - Windows self-hosted: `test-origin` label 付き PR または main push 時のみ実行
 
@@ -106,9 +106,9 @@ matplotlib-to-originlab/
 
 ## AI Tool Assignments
 
-- **Claude Code**: アーキテクチャ設計・大規模コード変更・プロジェクトセットアップ
-- **GitHub Copilot**: バグ修正・小規模実装・単体テスト作成
-- **Gemini CLI**: ドキュメント管理（`@AI_CONTEXT.md` で自動読み込み）
+- **使用ツール**：Claude Code、GitHub Copilot、Gemini CLI
+- **標準担当の正本**：[docs/dev-charter/AI_COLLABORATION_RULES.md](docs/dev-charter/AI_COLLABORATION_RULES.md) の「AI Tool Responsibilities」と「Rules for Multi-AI Usage」
+- **プロジェクト固有の上書き**：Codex 未使用のため、Codex 担当のコードレビュー・バグ調査は Claude Code が兼務する
 
 ---
 
