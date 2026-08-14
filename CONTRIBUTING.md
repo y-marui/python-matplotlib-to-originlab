@@ -19,12 +19,4 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format (e.g. `f
 
 ## Pull Request Checklist
 
-- [ ] No secrets or credentials included
-- [ ] Lint passes (`ruff check`, `ruff format --check`)
-- [ ] Type checks pass (`mypy`)
-- [ ] Tests pass (`pytest`)
-- [ ] Build succeeds
-- [ ] New features include tests
-- [ ] User-facing changes are documented
-- [ ] Added entry to CHANGELOG.md [Unreleased] section (if applicable)
-- [ ] Manually verified (if applicable)
+See [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for the current checklist.

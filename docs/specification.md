@@ -7,7 +7,7 @@ Origin のインストール状況に応じてローカル実行（core）また
 
 ---
 
-## figure_data スキーマ
+## figure_data Schema
 
 remote と server 間、および core との共通データフォーマット。
 
@@ -58,7 +58,7 @@ remote と server 間、および core との共通データフォーマット�
 
 ---
 
-## Server API エンドポイント
+## Server API Endpoints
 
 | メソッド | パス | 説明 |
 |---|---|---|
@@ -70,17 +70,17 @@ remote と server 間、および core との共通データフォーマット�
 | `GET` | `/health` | 生存確認 |
 | `GET` | `/version` | パッケージバージョン情報 |
 
-### 認証
+### Authentication
 
 `Authorization: Bearer <MATPLOTLIB_TO_ORIGINLAB_TOKEN>` ヘッダー必須。
 
-### IP 制限
+### IP Restriction
 
 `MATPLOTLIB_TO_ORIGINLAB_ALLOW_IPS` 環境変数（カンマ区切り IP / CIDR）で接続元を制限できる。未設定時は全許可。
 
 ---
 
-## Origin 制約
+## Origin Constraints
 
 - Origin は「単一計算ノード」: **並列処理禁止**、常に 1 ジョブのみ実行
 - Origin アクセスは常に `threading.Lock()` 内で行う
@@ -89,7 +89,7 @@ remote と server 間、および core との共通データフォーマット�
 
 ---
 
-## 環境変数
+## Environment Variables
 
 | 変数名 | デフォルト | 説明 |
 |---|---|---|
@@ -99,7 +99,7 @@ remote と server 間、および core との共通データフォーマット�
 
 ---
 
-## 通信プロトコル
+## Communication Protocol
 
 - HTTPS（自己署名証明書）、研究室 LAN 内のみを前提
 - `verify=False`（デフォルト）で自己署名証明書を許容
