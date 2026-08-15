@@ -88,3 +88,16 @@ repos:
         exclude: '^(core|client|sample|Documentation)/'
       - id: ruff-format
         exclude: '^(core|client|sample|Documentation)/'
+
+  # ----------------------------------------------------------------
+  # Local dev-charter version check
+  # (blocks if sibling ../dev-charter is newer, warns if older)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-local-charter-version
+        name: Check local dev-charter version
+        language: script
+        entry: scripts/check-local-charter-version.sh
+        pass_filenames: false
+        always_run: true
