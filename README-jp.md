@@ -1,160 +1,152 @@
-# Matplotlib to Originlab
+# Dev Charter (開発憲章)
 
 > **このファイルは正本（日本語版）です。**
 > 英語版（参照）は [README.md](README.md) を参照してください。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml)
-[![Charter Check](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/y-marui?style=social)](https://github.com/sponsors/y-marui)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/y.marui)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
+[![check-charter CI](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml)
 
-matplotlib の Figure を OriginLab グラフに変換する。OriginLab のインストール状況に応じてローカル実行とリモート実行を自動切替する。
+AI支援ソフトウェアプロジェクトのための共有開発憲章。
 
----
+このリポジトリは、プロジェクト横断的に使用される共通の哲学、アーキテクチャ原則、
+および開発ルールを定義します。
 
-## Monorepo structure
+## Documents
 
-```
-matplotlib-to-originlab/
-├── core/      matplotlib-to-originlab-core    ローカル実行エンジン（Windows + Origin）
-├── client/    matplotlib-to-originlab         ユーザー向けクライアント（全OS）
-├── remote/    matplotlib-to-originlab-remote  HTTP クライアント（サーバーモード用）
-└── server/    matplotlib-to-originlab-server  Origin 実行ノード
-```
+憲章ドキュメントの一覧とトピック別の参照先は、正本である [CHARTER_INDEX.md](CHARTER_INDEX.md) を参照してください。
 
-各サブディレクトリに独自の README と `pyproject.toml` がある。
+## How to Use
 
----
+1. `git subtree` で `docs/dev-charter/` に取り込む
+2. AI に dev-charter を読ませ、プロジェクトルートに `AI_CONTEXT.md` と AI ツール設定ファイルを生成させる
+3. 憲章が更新されたら `git subtree pull` 後、AI にコンテキストファイルを追従させる
 
-## Quick start
+構成仕様は [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) を参照。
 
-クライアントをインストール（ほとんどのユーザーはこれだけでよい）:
+## Quick Install
+
+プロジェクトのルートで実行してください：
 
 ```bash
-pip install matplotlib-to-originlab
+bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
 ```
 
-使い方:
+スクリプトが git subtree のセットアップを自動化し、Claude Code が利用可能であれば
+初回セットアップ（INSTALL_CHECKLIST）の起動まで案内します。
 
-```python
-import matplotlib.pyplot as plt
-import matplotlib_to_originlab as mto
+> **Note:** インストール先やブランチを変更する場合は環境変数で指定できます：
+> `CHARTER_PREFIX=path/to/charter bash <(curl -fsSL .../install.sh)`
 
-fig, ax = plt.subplots()
-ax.plot([1, 2, 3], [4, 5, 6], label="sample")
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-plt.legend()
-
-mto.run(fig, ax)  # OriginLab があればローカル実行、なければリモート実行
-```
-
-**Windows + OriginLab インストール済みの場合:** Origin を直接操作する。
-**その他の環境:** `matplotlib-to-originlab-server` にジョブを転送する（`matplotlib_to_originlab_remote.configure()` でサーバー URL を設定）。
-
----
-
-## Sample (matplotlib → Origin)
-
-```python
-import matplotlib.pyplot as plt
-import matplotlib_to_originlab as mto
-from astropy_extension.visualization import labeled_quantity_support
-import astropy.units as u
-import numpy as np
-
-fig, ax = plt.subplots()
-
-with labeled_quantity_support("$X$", "$M$"):
-    xraw = np.linspace(-1, 1, 10)
-    x = 10**xraw * u.m
-
-    y = xraw * u.kg / u.s**2
-    ax.plot(x, y, label="Model1")
-
-    y = -xraw * 1e3 * u.g / u.s**2
-    ax.plot(x, y, "o", markersize=10, label="Model2")
-
-    yerr = np.array([0.1] * len(xraw)) * u.kg / u.s**2
-    ax.errorbar(x, xraw * u.kg / u.s**2, fmt="o", yerr=yerr, label="Data", mfc="w")
-
-    plt.xscale("log")
-plt.legend()
-
-mto.run(fig, ax, folder_name="Folder", workbook_name="Book", graph_name="Graph")
-```
-
-Python での Figure
-
-![figure in python](sample/python.png)
-
-Origin でのグラフ
-
-![graph in origin](sample/origin.png)
-
----
-
-## Architecture
+## Install (git subtree)
 
 ```
-[User Code]
-    ↓
-matplotlib-to-originlab  (client)
-    ↓
-┌──────────────────────────────────────┐
-│  origin_available() == True          │
-│    → matplotlib-to-originlab-core    │  (ローカル、Windows + OriginLab)
-│                                      │
-│  origin_available() == False         │
-│    → matplotlib-to-originlab-remote  │  (HTTP クライアント)
-└──────────────────────────────────────┘
-    ↓ (リモートパスのみ)
-matplotlib-to-originlab-server
-    ↓
-OriginLab
+git remote add dev-charter https://github.com/y-marui/dev-charter
+git fetch dev-charter
+git subtree add --prefix=docs/dev-charter dev-charter main --squash
 ```
 
+インストール後、以下のプロンプトを AI ツールに貼り付けてください：
+
+```
+docs/dev-charter/INSTALL_CHECKLIST.md を実行して
+```
+
+## Update
+
+`dev-charter` リモートが未設定の場合（プロジェクトを clone した直後など）は先に追加する：
+
+```
+git remote add dev-charter https://github.com/y-marui/dev-charter
+git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+```
+
+> **Note（テンプレートリポジトリから作成したプロジェクト）:**
+> GitHub テンプレートはファイルのみコピーし git 履歴を引き継がないため、`git subtree pull` は失敗します。
+> `check-charter.yml` ワークフローがこのケースを自動検出して対処します。
+> 手動で更新する場合は `git subtree pull` の代わりに以下を実行してください：
+> ```bash
+> git remote add dev-charter https://github.com/y-marui/dev-charter || true
+> git fetch dev-charter
+> SPLIT=$(git rev-parse dev-charter/main)
+> rm -rf docs/dev-charter/
+> mkdir -p docs/dev-charter/
+> git archive dev-charter/main | tar -x -C docs/dev-charter/
+> git add docs/dev-charter/
+> git commit -m "Squashed 'docs/dev-charter/' content from commit ${SPLIT}
+>
+> git-subtree-dir: docs/dev-charter
+> git-subtree-split: ${SPLIT}"
+> ```
+
+更新後、以下のプロンプトを AI ツールに貼り付けてください：
+
+```
+docs/dev-charter/UPDATE_CHECKLIST.md を実行して
+```
+
+## Makefile Helper
+
+```
+update-charter:
+	git remote | grep -q '^dev-charter$$' || \
+	  git remote add dev-charter https://github.com/y-marui/dev-charter
+	git fetch dev-charter
+	git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+```
+
+## Version Check (CI)
+
+`.github/workflows/dev-charter-check.yml` をプロジェクトに追加すると、
+PR作成や main への push をきっかけに最新バージョンを確認し、古い場合は update PR を作成します
+（直近7日以内に成功したチェックがあればスキップするため、活発な repo でも毎回チェックが走ることはありません）。
+
+```yaml
+name: Dev Charter
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    if: github.actor != 'dependabot[bot]'
+    uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+```
+
+> **Note:** dependabot が作成した PR ではスキップされます（依存関係更新だけが動いている間はチェック不要という判断）。
+> repo が完全に静止している間はチェックが走らないため、活動に関わらず定期的に確認したい場合は
+> 上記に加えて低頻度の `schedule`（例：月1回）を併用してください。
+
+> **Note:** Branch Protection で direct push が禁止されている場合は、
+> GitHub Actions bot の bypass rule を追加してください
+> （Settings > Rules > Rulesets > Bypass list > GitHub Actions）。
+
+## Badge for Adopting Projects
+
+プロジェクトの README にこのバッジを追加すると、dev-charter の更新状態を可視化できます。
+
+### Workflow Status Badge
+
+dev-charter が最新かどうかを表示します。
+
+```markdown
+[![Charter Check](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml)
+```
+
+`{owner}` と `{repo}` を自分のリポジトリのオーナー名・リポジトリ名に置き換えてください。
+
+| 状態 | Status Badge |
+|---|---|
+| 未導入 / CI 未設定 | 赤（VERSION not found） |
+| 導入済み・最新 | 緑 |
+| 導入済み・更新必要 | 赤 |
+
 ---
 
-## Packages
-
-| パッケージ | 役割 | PyPI |
-|---|---|---|
-| **matplotlib-to-originlab** | ユーザー向けクライアント（ここから始める） | 予定 |
-| matplotlib-to-originlab-core | ローカル実行エンジン（Windows のみ） | なし（パス参照） |
-| matplotlib-to-originlab-remote | HTTP クライアント（サーバーモード用） | 予定 |
-| matplotlib-to-originlab-server | Origin 実行ノード（Windows のみ） | 予定 |
-
----
-
-## Roadmap
-
-詳細は [ROADMAP.md](ROADMAP.md) を参照:
-
-- リモートトランスポート実装
-- サーバー HTTP API
-- フォントサイズ・軸ラベルの改善
-- `errorbar` の `xerr` サポート
-- PyPI 公開
-
----
-
-## Origins
-
-[jsbangsund/python_to_originlab](https://github.com/jsbangsund/python_to_originlab)（MIT）からのフォーク。
-
-主な変更点:
-- OriginEXT から `originpro` へ移行
-- `astropy.units.Quantity` サポート追加
-- `matplotlib.pyplot.errorbar` の `yerr` サポート追加
-- client / core / remote / server に分離したモノレポ構造に再編
-
----
-
-## License
-
-MIT — [LICENSE](LICENSE) を参照。
-
----
 *この文書には英語版 [README.md](README.md) があります。編集時は同一コミットで更新してください。*

@@ -1,162 +1,154 @@
-# Matplotlib to Originlab
+# Dev Charter
 
 > **This is the reference (English) version.**
-> The canonical (Japanese) version is [README-jp.md](README-jp.md).
+> For the canonical (Japanese) version, see [README-jp.md](README-jp.md).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/ci.yml)
-[![Charter Check](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/python-matplotlib-to-originlab/actions/workflows/check-charter.yml)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/y-marui?style=social)](https://github.com/sponsors/y-marui)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/y.marui)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
+[![check-charter CI](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml/badge.svg)](https://github.com/y-marui/dev-charter/actions/workflows/check-charter.yml)
 
-Convert matplotlib figures to OriginLab graphs — automatically choosing local
-or remote execution depending on whether OriginLab is available.
+Shared development charter for AI-assisted software projects.
 
----
+This repository defines common philosophy, architecture principles,
+and development rules used across projects.
 
-## Monorepo structure
+## Documents
 
-```
-matplotlib-to-originlab/
-├── core/      matplotlib-to-originlab-core    Local execution engine (Windows + Origin)
-├── client/    matplotlib-to-originlab         User-facing client (all platforms)
-├── remote/    matplotlib-to-originlab-remote  HTTP client for server mode
-└── server/    matplotlib-to-originlab-server  Origin execution node
-```
+See the canonical [CHARTER_INDEX.md](CHARTER_INDEX.md) for the complete document list and topic-to-file lookup table.
 
-See each subdirectory for its own README and `pyproject.toml`.
+## How to Use
 
----
+1. Pull dev-charter into `docs/dev-charter/` via `git subtree`
+2. Have the AI read the charter and generate `AI_CONTEXT.md` and agent config files at the project root
+3. After charter updates, run `git subtree pull` and have the AI sync the context files
 
-## Quick start
+See [AI_TOOL_SETUP.md](AI_TOOL_SETUP.md) for the structure spec.
 
-Install the client (the only package most users need):
+## Quick Install
+
+Run from your project root:
 
 ```bash
-pip install matplotlib-to-originlab
+bash <(curl -fsSL https://raw.githubusercontent.com/y-marui/dev-charter/main/scripts/install.sh)
 ```
 
-Then:
+The script automates the git subtree setup and, if Claude Code is available,
+guides you through the initial setup (INSTALL_CHECKLIST).
 
-```python
-import matplotlib.pyplot as plt
-import matplotlib_to_originlab as mto
+> **Note:** To customize the install path or branch, use environment variables:
+> `CHARTER_PREFIX=path/to/charter bash <(curl -fsSL .../install.sh)`
 
-fig, ax = plt.subplots()
-ax.plot([1, 2, 3], [4, 5, 6], label="sample")
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-plt.legend()
-
-mto.run(fig, ax)  # auto: local if Origin available, else remote
-```
-
-On a **Windows machine with OriginLab installed**, this uses Origin directly.
-On **any other machine**, it forwards the job to a `matplotlib-to-originlab-server`
-instance (configure the server URL with `matplotlib_to_originlab_remote.configure()`).
-
----
-
-## Sample (matplotlib → Origin)
-
-```python
-import matplotlib.pyplot as plt
-import matplotlib_to_originlab as mto
-from astropy_extension.visualization import labeled_quantity_support
-import astropy.units as u
-import numpy as np
-
-fig, ax = plt.subplots()
-
-with labeled_quantity_support("$X$", "$M$"):
-    xraw = np.linspace(-1, 1, 10)
-    x = 10**xraw * u.m
-
-    y = xraw * u.kg / u.s**2
-    ax.plot(x, y, label="Model1")
-
-    y = -xraw * 1e3 * u.g / u.s**2
-    ax.plot(x, y, "o", markersize=10, label="Model2")
-
-    yerr = np.array([0.1] * len(xraw)) * u.kg / u.s**2
-    ax.errorbar(x, xraw * u.kg / u.s**2, fmt="o", yerr=yerr, label="Data", mfc="w")
-
-    plt.xscale("log")
-plt.legend()
-
-mto.run(fig, ax, folder_name="Folder", workbook_name="Book", graph_name="Graph")
-```
-
-figure in python
-
-![figure in python](sample/python.png)
-
-graph in origin
-
-![graph in origin](sample/origin.png)
-
----
-
-## Architecture
+## Install (git subtree)
 
 ```
-[User Code]
-    ↓
-matplotlib-to-originlab  (client)
-    ↓
-┌──────────────────────────────────────┐
-│  origin_available() == True          │
-│    → matplotlib-to-originlab-core    │  (local, Windows + OriginLab)
-│                                      │
-│  origin_available() == False         │
-│    → matplotlib-to-originlab-remote  │  (HTTP client)
-└──────────────────────────────────────┘
-    ↓ (remote path only)
-matplotlib-to-originlab-server
-    ↓
-OriginLab
+git remote add dev-charter https://github.com/y-marui/dev-charter
+git fetch dev-charter
+git subtree add --prefix=docs/dev-charter dev-charter main --squash
 ```
 
+After installing, paste the following prompt into your AI tool:
+
+```
+Run docs/dev-charter/INSTALL_CHECKLIST.md
+```
+
+## Update
+
+If the `dev-charter` remote is not set up (e.g., after cloning the project), add it first:
+
+```
+git remote add dev-charter https://github.com/y-marui/dev-charter
+git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+```
+
+> **Note (projects created from a template repository):**
+> GitHub templates copy files only — git history is not carried over — so `git subtree pull` will fail.
+> The `check-charter.yml` workflow detects this automatically and handles it.
+> For manual updates, use the following instead of `git subtree pull`:
+> ```bash
+> git remote add dev-charter https://github.com/y-marui/dev-charter || true
+> git fetch dev-charter
+> SPLIT=$(git rev-parse dev-charter/main)
+> rm -rf docs/dev-charter/
+> mkdir -p docs/dev-charter/
+> git archive dev-charter/main | tar -x -C docs/dev-charter/
+> git add docs/dev-charter/
+> git commit -m "Squashed 'docs/dev-charter/' content from commit ${SPLIT}
+>
+> git-subtree-dir: docs/dev-charter
+> git-subtree-split: ${SPLIT}"
+> ```
+
+After updating, paste the following prompt into your AI tool:
+
+```
+Run docs/dev-charter/UPDATE_CHECKLIST.md
+```
+
+## Makefile helper
+
+```
+update-charter:
+	git remote | grep -q '^dev-charter$$' || \
+	  git remote add dev-charter https://github.com/y-marui/dev-charter
+	git fetch dev-charter
+	git subtree pull --prefix=docs/dev-charter dev-charter main --squash
+```
+
+## Version Check (CI)
+
+Add `.github/workflows/dev-charter-check.yml` to your project to check for updates
+when a PR is opened or a commit is pushed to main, and open an update PR if outdated
+(the check is skipped if one already succeeded within the last 7 days, so busy repos
+don't re-check on every single event).
+
+```yaml
+name: Dev Charter
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    if: github.actor != 'dependabot[bot]'
+    uses: y-marui/dev-charter/.github/workflows/check-charter.yml@main
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+```
+
+> **Note:** Dependabot PRs are skipped — dependency-only activity doesn't warrant a
+> charter check. If your repository goes fully quiet, no check will run. If you want a
+> guaranteed periodic check regardless of activity, add a low-frequency `schedule`
+> (e.g. monthly) alongside this.
+
+> **Note:** If your repository has Branch Protection rules that prevent direct pushes,
+> add a bypass rule for the GitHub Actions bot
+> (Settings > Rules > Rulesets > Bypass list > GitHub Actions).
+
+## Badge for Adopting Projects
+
+Place this badge in your project README to show dev-charter update health.
+
+### Workflow Status Badge
+
+Shows whether dev-charter is up to date.
+
+```markdown
+[![Charter Check](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/dev-charter-check.yml)
+```
+
+Replace `{owner}` and `{repo}` with your GitHub organization and repository name.
+
+| State | Status Badge |
+|---|---|
+| Not installed / CI not set up | red (VERSION not found) |
+| Installed, up to date | green |
+| Installed, outdated | red |
+
 ---
 
-## Packages
-
-| Package                           | Role                                  | Install via PyPI |
-|-----------------------------------|---------------------------------------|-----------------|
-| **matplotlib-to-originlab**       | User client — start here              | Planned          |
-| matplotlib-to-originlab-core      | Local execution engine (Windows only) | No (path ref)    |
-| matplotlib-to-originlab-remote    | HTTP client for server mode           | Planned          |
-| matplotlib-to-originlab-server    | Origin execution node (Windows only)  | Planned          |
-
----
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for the full implementation plan, including:
-
-- Remote transport implementation
-- Server HTTP API
-- Font size / axis label improvements in core
-- `errorbar` `xerr` support
-- PyPI publishing
-
----
-
-## Origins
-
-Forked from [jsbangsund/python_to_originlab](https://github.com/jsbangsund/python_to_originlab) (MIT).
-
-Key changes from the fork:
-- Switched from OriginEXT to `originpro`
-- Added `astropy.units.Quantity` support
-- Added `matplotlib.pyplot.errorbar` support (`yerr`)
-- Restructured as a monorepo with client / core / remote / server separation
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE).
-
----
 *This document has a Japanese canonical version [README-jp.md](README-jp.md). Update both in the same commit when editing.*

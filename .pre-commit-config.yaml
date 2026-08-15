@@ -3,9 +3,18 @@ exclude: |
     node_modules/|
     vendor/|
     \.git/|
+    \.yarn/|
     dist/|
     build/|
+    \.next/|
     __pycache__/|
+    .*\.min\.js$|
+    .*\.min\.css$|
+    go\.sum$|
+    package-lock\.json$|
+    yarn\.lock$|
+    Gemfile\.lock$|
+    Cargo\.lock$|
     poetry\.lock$
   )
 
@@ -25,14 +34,15 @@ repos:
       # Required: SSH private key detection
       - id: detect-private-key
 
+      # Required: block .env files (.env.example / .env.sample / .env.template are allowed)
       - id: check-added-large-files
         args: ["--maxkb=500"]
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-json
-      - id: check-toml
       - id: check-merge-conflict
+      - id: check-executables-have-shebangs
       - id: check-case-conflict
 
   # Required: .env file check (hook id contains "detect-dotenv")
@@ -55,16 +65,43 @@ repos:
         language: pygrep
         entry: '(/Users/[A-Za-z0-9_.-]+/|/home/[A-Za-z0-9_.-]+/|C:\\Users\\)'
         types_or: [text]
+        # Note: exclude はファイル「パス」に対するマッチ。
+        # 設定ファイル自身（allowlist パターンを含む）は除外する。
         exclude: |
           (?x)(
             \.md$|
             docs/|
             \.github/|
             \.gitleaks\.toml$|
-            \.pre-commit-config\.yaml$|
-            OriginTemplates/|
-            Documentation/
+            \.pre-commit-config\.yaml$
           )
+
+  # BEGIN DEV-CHARTER ONLY
+  # ----------------------------------------------------------------
+  # VERSION date check
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-version-date
+        name: Check VERSION date
+        language: script
+        entry: scripts/check-version-date.sh
+        pass_filenames: false
+        always_run: true
+  # END DEV-CHARTER ONLY
+
+  # ----------------------------------------------------------------
+  # Local dev-charter version check
+  # (blocks if sibling ../dev-charter is newer, warns if older)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: check-local-charter-version
+        name: Check local dev-charter version
+        language: script
+        entry: scripts/check-local-charter-version.sh
+        pass_filenames: false
+        always_run: true
 
   # ----------------------------------------------------------------
   # Markdown section headings
@@ -78,13 +115,11 @@ repos:
         files: '\.md$'
 
   # ----------------------------------------------------------------
-  # Linting & formatting (ruff)
+  # Shell scripts
   # ----------------------------------------------------------------
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.6
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
     hooks:
-      - id: ruff
-        args: [--fix]
-        exclude: '^(core|client|sample|Documentation)/'
-      - id: ruff-format
-        exclude: '^(core|client|sample|Documentation)/'
+      - id: shellcheck
+        args: ["--severity=warning"]
+        exclude: '\.zsh$'

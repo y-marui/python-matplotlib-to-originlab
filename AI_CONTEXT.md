@@ -1,123 +1,89 @@
-# AI_CONTEXT — matplotlib-to-originlab
-
 ## Reference Order
 
-AI はタスク開始時に以下の順で参照する:
+AI はタスク開始時に以下の順で参照する：
 
-1. `README-jp.md`（概要・セットアップ）
-2. `DEVELOPING.md`（ビルド・実装規約・命名規則）※未作成の場合は AI_CONTEXT.md の Project-Specific Rules を参照
-
-必要に応じて以下を参照する（順不同）:
-- `CONTRIBUTING.md`（PR・Issue ルール）
-- `docs/architecture.md`（モジュール・コンポーネント構造）
-- `docs/file-map.md`（ファイルレベルの依存関係 ※情報が足りない・古い場合は適宜探索し、追記・更新する）
-- `docs/specification.md`（機能仕様・データフロー）
-- `docs/ui-design.md`（UI 設計・コンポーネント仕様）
-
----
+1. `README-jp.md`（このリポジトリの概要・導入・更新方法）
+2. `CHARTER_INDEX.md`（タスクに関係する憲章ファイルの特定）
+3. `CHARTER_INDEX.md` で特定したファイル（原則 1〜2 件）
 
 ## Project Overview
 
-**Purpose:** matplotlib の Figure を OriginLab グラフに変換するシステム。Origin のインストール状況に応じてローカル実行とリモート実行を自動切替する。
+dev-charter の本体。他プロジェクトが `git subtree` で取り込む共有開発憲章。
+ドキュメントのみのリポジトリ（ソースコードなし）。
 
-**Tech stack:** Python 3.13 / pyenv + uv / ruff + mypy + pytest / FastAPI / SQLite
+このファイルは **dev-charter リポジトリ自体を作業する AI 向け**のコンテキスト。
+採用先プロジェクトへの導入手順は `README-jp.md` を参照すること。
 
-**Monorepo structure:**
+### Technology Stack
 
-```
-matplotlib-to-originlab/
-├── client/   matplotlib-to-originlab         ユーザー向けクライアント（全OS）
-├── core/     matplotlib-to-originlab-core    ローカル実行エンジン（Windows + Origin）
-├── remote/   matplotlib-to-originlab-remote  HTTP クライアント（サーバーモード用）
-├── server/   matplotlib-to-originlab-server  Origin 実行ノード（FastAPI, Windows）
-├── tests/    統合テスト
-├── docs/     アーキテクチャ・仕様・ファイルマップ等
-└── docs/dev-charter/  開発憲章（git subtree）
-```
+- Markdown：憲章・ガイドライン・チェックリスト
+- Bash：インストール・バージョン検証スクリプト
+- GitHub Actions / pre-commit：CI・セキュリティ・文書品質の検証
+- アプリケーション用のランタイム・フレームワーク：なし
 
-**Platform split:**
-- Windows のみ: `core/`（originpro + win32com）、`server/`
-- クロスプラットフォーム: `client/`、`remote/`
+### Main Directories
 
-**Ruff スコープ:** `remote/` と `server/` のみ（`core/`・`client/` は除外）
-
----
+| パス | 役割 |
+|---|---|
+| `/` | 共通原則・ポリシー・AI コンテキスト・導入手順 |
+| `topics/` | 技術・運用トピック別の詳細ガイドライン |
+| `scripts/` | インストール・バージョン検証スクリプト |
+| `.github/workflows/` | CI・VERSION 更新・採用先向け更新ワークフロー |
 
 ## Applied Charter Principles
 
-憲章参照: `docs/dev-charter/CHARTER_INDEX.md` でトピックを特定してから該当ファイルのみ読む
-
-- **Conventional Commits**（feat/fix/docs/chore）でコミットする
-- **変更範囲は必要最小限**（YAGNI）、3 回目の重複で初めて抽象化を検討
-- **コメントは「なぜ」のみ**。コードから自明な処理には書かない
-- **セキュリティ:** secrets はコードに書かず環境変数で管理。`.env` はコミット禁止
-- **CI 必須:** security → lint → test → build の順。`build` job が全集約点
-- **main への直接 push 禁止**。PR 経由でのみマージ
-- **外部公開面は英語必須**（コミットメッセージ・PR・docstring・エラーメッセージ）
-
----
+- コンテキストが競合する場合は `AI_CONTEXT_HIERARCHY.md` の優先順位に従う
+- 変更範囲を必要最小限にし、YAGNI・既存パターン優先など `PRINCIPLES.md` の設計原則に従う
+- シークレット管理と検証は `SECURITY_POLICY.md` に従う
 
 ## Document Sync Rule
 
 仕様・ルール・構成に変更が生じたとき、変更と同じ作業内で関連ドキュメントを更新する。
 対象は docs/ 内のファイルに限らず、AI_CONTEXT.md・README.md 等のルートファイルも含む。
 
----
-
 ## Project-Specific Rules
 
-### Origin Constraints (Critical)
-- Origin は「単一計算ノード」: **並列処理禁止**、常に 1 ジョブのみ実行
-- Origin アクセスは常に `threading.Lock()` 内で行う
-- 各ジョブ間で必ず状態リセット（`doc -n;` で新規プロジェクト）
+- **正本は日本語**。英語版（README.md）は翻訳。日本語版と英語版は同一コミットで更新する（`LANGUAGE_POLICY.md` 参照）
+- **Conventional Commits**（feat/fix/docs/chore）でコミットする
+- **コミット前に `VERSION` を今日の日付（UTC、`YYYY-MM-DD`）に更新する**。1日に複数回リリースしない（日付がバージョン識別子のため）。pre-commit フックが自動検証する
+  - ローカルの更新コマンド：`UPDATE=1 bash scripts/check-version-date.sh`（`VERSION` を UTC 日付で更新）
+  - **クラウド/エージェント環境**：ローカルの pre-commit フックが動作しない。CI の自動更新ワークフロー（`.github/workflows/update-version.yml`）が `VERSION` を自動的に更新してコミットするため、漏れた場合は CI が補完する。エージェントは可能な限り手動で VERSION を更新するのが望ましい
+- **新規ドキュメントを追加するとき**は正本の索引である `CHARTER_INDEX.md` を更新する
+- **憲章に追加できる原則・ルール**は複数の異なるプロジェクトに適用できるものに限る（1プロジェクト固有のルールは不可）
+- **dev-charter 全ドキュメントのセクションヘッダ**：日本語ドキュメントでも英語で記載する
 
-### Architecture
-```
-[User Code] → client → core（local）or remote（HTTP）
-                              ↓
-                        server（FastAPI）→ Job DB（SQLite）→ Worker → Origin
-```
+## CI Workflows
 
-### API Specification (server)
-- `POST /job` — ジョブ投入 → `{ "job_id": "uuid" }`
-- `GET /job/{job_id}` — ステータス確認
-- `GET /result/{job_id}` — 結果取得（.opju or .pptx）
-- `POST /job/{job_id}/cancel` — キャンセル
-- 認証: `Authorization: Bearer <token>`（環境変数 `MATPLOTLIB_TO_ORIGINLAB_TOKEN`）
-- 通信: HTTPS（自己署名証明書）、研究室 LAN 内のみを前提
+このリポジトリには以下の GitHub Actions ワークフローが存在する：
 
-### Timeout
-- `MAX_RUNTIME = 300` 秒。超過時は Origin 強制終了 → 再起動 → job → timeout
+| ファイル | 目的 |
+|---|---|
+| `.github/workflows/ci.yml` | PR・main push に対して `pre-commit run --all-files` を実行し、`check-version-date` 等のフックを強制する |
+| `.github/workflows/update-version.yml` | 非フォーク PR で `VERSION` が古い場合に自動更新コミットを行う（cloud/agent 対応） |
+| `.github/workflows/check-charter.yml` | 採用先プロジェクトから呼び出す再利用可能ワークフロー（dev-charter 本体の CI ではない） |
 
-### figure_data Schema
-```json
-{
-  "graphs": [{ "type": "line|scatter|bar", "x": [], "y": [], "title": "", ... }],
-  "output_format": "opju | pptx",
-  "pptx_layout": { "graphs_per_slide": 1 }
-}
-```
+`ci.yml` の `Build` ジョブが Branch Protection の必須ステータスチェックとして機能する。
 
-### Test Policy
-- Linux CI: respx モック（Origin 不要）でリモート・サーバー HTTP 層をテスト
-- Windows self-hosted: `test-origin` label 付き PR または main push 時のみ実行
+## Security Hooks
 
----
+`core.hooksPath` が設定済みかどうかで手順が異なる：
+
+- **設定済み**（グローバルフックが pre-commit を呼ぶ）：`pre-commit install` 不要。`pre-commit run --all-files` で動作確認
+- **未設定**：`pre-commit install` 後に `pre-commit run --all-files` で動作確認
+
+pre-commit は、シークレット・ローカル絶対パス・VERSION 日付・ローカル dev-charter バージョン（sibling `../dev-charter` との比較）・Markdown の H2〜H6 の見出し言語・シェルスクリプトを機械的に検証する。日英文書の意味的一致など判断を要する項目は、AI または人間がレビューする。
+
+確認コマンド：`git config core.hooksPath`
 
 ## AI Tool Assignments
 
-- **使用ツール**：Claude Code、GitHub Copilot、Gemini CLI
-- **標準担当の正本**：[docs/dev-charter/AI_COLLABORATION_RULES.md](docs/dev-charter/AI_COLLABORATION_RULES.md) の「AI Tool Responsibilities」と「Rules for Multi-AI Usage」
-- **プロジェクト固有の上書き**：Codex 未使用のため、Codex 担当のコードレビュー・バグ調査は Claude Code が兼務する
-
----
+- **使用ツール**：Claude Code、Codex、GitHub Copilot、Gemini CLI、ローカル LLM（Ollama）
+- **標準担当の正本**：`AI_COLLABORATION_RULES.md` の「AI Tool Responsibilities」と「Rules for Multi-AI Usage」
+- **このリポジトリ固有の上書き**：なし
 
 ## Prohibited Actions
 
-- secrets・認証情報のコードへのハードコード / コミット
-- `.env` ファイルのコミット（`.env.example` はコミット可）
-- ローカル絶対パスのソースコードへのハードコード
-- Origin への並列アクセス
-- `main` への直接 push
-- AI との会話ログのコミット
-- `docs/dev-charter/` 配下のファイルの直接編集（変更は dev-charter リポジトリ本体に Issue を立て `git subtree pull` で取り込む）
+- シークレット・認証情報のコミット
+- 未完成・曖昧な原則のコミット（issue で管理する）
+- プロジェクト固有のルールを憲章に追加すること
+- ソースコード・ビルド成果物・ログのコミット
