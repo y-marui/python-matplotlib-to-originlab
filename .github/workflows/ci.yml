@@ -25,6 +25,10 @@ jobs:
           fetch-depth: 0  # gitleaks requires full history
 
       - uses: pre-commit/action@v3.0.1
+        env:
+          # powershell-lint is a local-only convenience check (see
+          # .pre-commit-config.yaml); it isn't required to gate merges.
+          SKIP: powershell-lint
 
   # ---------------------------------------------------------------------------
   # Lint & type check (Linux, no Origin required)
