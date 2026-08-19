@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: [main]
 
 # Cancel in-progress runs for the same branch when a new commit is pushed.
@@ -12,11 +13,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect changes
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          predicate-quantifier: 'some-with-excludes'
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!LICENSE'
+              - '!.gitignore'
+              - '!.github/FUNDING.yml'
+              - '!.github/CODEOWNERS'
+              - '!.github/ISSUE_TEMPLATE/**'
+              - '!.github/*_TEMPLATE.md'
+              - '!.github/pull_request_template.md'
+              - '!.github/copilot-instructions.md'
+              - '!.github/workflows/dev-charter-check.yml'
+              - '!.github/workflows/auto-assign-self.yml'
+
   # ---------------------------------------------------------------------------
   # Security scan (pre-commit / gitleaks)
   # ---------------------------------------------------------------------------
   security:
     name: Security scan (pre-commit)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +65,8 @@ jobs:
   # ---------------------------------------------------------------------------
   lint:
     name: Lint & type check
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -77,6 +109,8 @@ jobs:
   # ---------------------------------------------------------------------------
   test:
     name: Tests (Linux / Origin-free, Python ${{ matrix.python-version }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -119,7 +153,8 @@ jobs:
   # ---------------------------------------------------------------------------
   build:
     name: Build
-    needs: [security, lint, test]
+    needs: [changes, security, lint, test]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -141,3 +176,26 @@ jobs:
         run: |
           python -c "import matplotlib_to_originlab_remote"
           python -c "import matplotlib_to_originlab_server"
+
+  gate:
+    name: Required Checks
+    needs: [changes, security, lint, test, build]
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required jobs succeeded
+        run: |
+          if [ "${{ needs.security.result }}" != "success" ]; then
+            echo "::error::security did not succeed (got: ${{ needs.security.result }})"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.code }}" != "true" ]; then
+            echo "docs/config-only change; nothing further to verify"
+            exit 0
+          fi
+          for result in "${{ needs.lint.result }}" "${{ needs.test.result }}" "${{ needs.build.result }}"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::a required job did not succeed (got: $result)"
+              exit 1
+            fi
+          done
