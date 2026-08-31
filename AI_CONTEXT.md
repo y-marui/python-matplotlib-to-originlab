@@ -20,7 +20,7 @@ AI はタスク開始時に以下の順で参照する:
 
 **Purpose:** matplotlib の Figure を OriginLab グラフに変換するシステム。Origin のインストール状況に応じてローカル実行とリモート実行を自動切替する。
 
-**Tech stack:** Python 3.13 / pyenv + uv / ruff + mypy + pytest / FastAPI / SQLite
+**Tech stack:** Python 3.14 / pyenv + uv / ruff + mypy + pytest / FastAPI / SQLite
 
 **Monorepo structure:**
 

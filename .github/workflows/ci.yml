@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, update-charter]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [main]
+    branches: [main, update-charter]
 
 # Cancel in-progress runs for the same branch when a new commit is pushed.
 concurrency:
@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]  # EOLまで6ヶ月以上あるバージョン
+        python-version: ["3.11", "3.12", "3.13", "3.14"]  # EOLまで6ヶ月以上あるバージョン
 
     steps:
       - uses: actions/checkout@v7
@@ -178,7 +178,7 @@ jobs:
           python -c "import matplotlib_to_originlab_server"
 
   gate:
-    name: Required Checks
+    name: CI
     needs: [changes, security, lint, test, build]
     if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
