@@ -54,6 +54,10 @@ jobs:
         with:
           fetch-depth: 0  # gitleaks requires full history
 
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+
       - uses: pre-commit/action@v3.0.1
         env:
           # powershell-lint is a local-only convenience check (see
