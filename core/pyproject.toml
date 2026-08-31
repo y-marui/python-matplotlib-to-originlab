@@ -1,31 +1,35 @@
-[tool.poetry]
+[project]
 name = "matplotlib-to-originlab-core"
 version = "0.1.2"
 description = "Core execution engine for matplotlib-to-originlab (Windows + OriginLab only, not published to PyPI)"
-authors = ["y-marui"]
+authors = [{name = "y-marui"}]
 readme = "README.md"
 license = "MIT"
-packages = [{include = "matplotlib_to_originlab_core"}]
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.6.3,<4",
+    "originext>=1.2.0,<2; sys_platform == 'win32'",
+    "originpro>=1.1.4,<2; sys_platform == 'win32'",
+    "pywin32; sys_platform == 'win32'",
+]
 
 # NOTE: This package is NOT intended to be published to PyPI.
 # It is referenced locally by matplotlib-to-originlab and matplotlib-to-originlab-server
-# using path dependencies in their pyproject.toml files.
+# as workspace members (see the root pyproject.toml's [tool.uv.workspace]).
 # Windows + OriginLab installation required.
 
-[tool.poetry.dependencies]
-python = "^3.11"
-matplotlib = "^3.6.3"
-originext = {version = "^1.2.0", markers = "sys_platform == 'win32'"}
-originpro = {version = "^1.1.4", markers = "sys_platform == 'win32'"}
-pywin32 = {version = "*", markers = "sys_platform == 'win32'"}
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3,<10",
+    "autopep8>=2.0.1,<3",
+    "ipykernel>=6.20.2,<7",
+    "astropy>=5.2.1",
+    "astropy-extension",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.2.1"
-autopep8 = "^2.0.1"
-ipykernel = "^6.20.2"
-astropy = "^5.2.1"
-astropy-extension = {git = "https://github.com/y-marui/astropy-extension"}
+[tool.uv.sources]
+astropy-extension = { git = "https://github.com/y-marui/astropy-extension" }
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
