@@ -60,7 +60,7 @@ exclude = ["core", "client", "sample", "Documentation", "tests"]
 extend-exclude = ["docs/dev-charter"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
+select = ["E", "F", "W", "I", "UP"]
 ignore = [
     "E501",   # line too long — not enforced (formatter handles layout)
     "F841",   # local variable assigned but never used (common in WIP code)
@@ -71,7 +71,9 @@ ignore = [
 # ---------------------------------------------------------------------------
 
 [tool.mypy]
-python_version = "3.13"
+# 3.12+ required to parse numpy's stubs (PEP 695 `type` statements); runtime
+# support still targets requires-python above (3.11+).
+python_version = "3.12"
 ignore_missing_imports = true
 # Keep strict checking off for now; tighten per-package as needed.
 warn_unused_ignores = false
