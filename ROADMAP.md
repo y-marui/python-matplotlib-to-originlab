@@ -136,6 +136,7 @@ See `AI_CONTEXT.md` for full technical specification.
 def origin_available() -> bool:
     try:
         import win32com.client
+
         win32com.client.Dispatch("Origin.Application")
         return True
     except Exception:
