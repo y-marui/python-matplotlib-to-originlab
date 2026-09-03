@@ -54,6 +54,10 @@ line-length = 100
 target-version = "py310"
 # Lint only the cross-platform packages; core/ is Windows-only.
 exclude = ["core", "client", "sample", "Documentation", "tests"]
+# docs/dev-charter/ is a git subtree we cannot edit directly (see
+# AI_CONTEXT.md); recent ruff formats fenced Python blocks in Markdown
+# by default, which would otherwise flag it.
+extend-exclude = ["docs/dev-charter"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
