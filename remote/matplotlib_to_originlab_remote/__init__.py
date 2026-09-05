@@ -61,14 +61,16 @@ def _extract_figure_data(fig, ax, **kwargs) -> dict:
     """Extract matplotlib figure/axes state into a JSON-serialisable dict."""
 
     errorbar_containers = [c for c in ax.containers if isinstance(c, ErrorbarContainer)]
-    container_children = {child for c in errorbar_containers for child in c.get_children()}
+    container_children = {
+        child for c in errorbar_containers for child in c.get_children()
+    }
 
     plots: list[dict] = []
 
     # --- lines and errorbars ---
-    line_entries = [(line, None) for line in ax.lines if line not in container_children] + [
-        (c.lines[0], c) for c in errorbar_containers
-    ]
+    line_entries = [
+        (line, None) for line in ax.lines if line not in container_children
+    ] + [(c.lines[0], c) for c in errorbar_containers]
 
     for line, container in line_entries:
         xdata = line.get_xdata()

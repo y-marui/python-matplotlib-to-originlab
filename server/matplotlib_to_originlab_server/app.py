@@ -59,7 +59,9 @@ if _raw_allow:
                 ALLOW_NETWORKS.append(ipaddress.ip_network(_entry, strict=False))
             except ValueError:
                 # Try treating it as a bare host address
-                ALLOW_NETWORKS.append(ipaddress.ip_network(_entry + "/32", strict=False))
+                ALLOW_NETWORKS.append(
+                    ipaddress.ip_network(_entry + "/32", strict=False)
+                )
 
 # ---------------------------------------------------------------------------
 # Application
@@ -126,7 +128,9 @@ async def submit_job(request: Request):
     body = await request.json()
     figure_data = body.get("figure_data")
     if not figure_data:
-        raise HTTPException(status_code=422, detail="Missing 'figure_data' in request body")
+        raise HTTPException(
+            status_code=422, detail="Missing 'figure_data' in request body"
+        )
 
     job_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
@@ -246,10 +250,18 @@ def main() -> None:
         prog="matplotlib-to-originlab-server",
         description="Origin execution node for matplotlib-to-originlab",
     )
-    parser.add_argument("--host", default="0.0.0.0", help="Bind host (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8719, help="Bind port (default: 8719)")
-    parser.add_argument("--ssl-certfile", default=None, help="Path to SSL certificate file")
-    parser.add_argument("--ssl-keyfile", default=None, help="Path to SSL private key file")
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="Bind host (default: 0.0.0.0)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8719, help="Bind port (default: 8719)"
+    )
+    parser.add_argument(
+        "--ssl-certfile", default=None, help="Path to SSL certificate file"
+    )
+    parser.add_argument(
+        "--ssl-keyfile", default=None, help="Path to SSL private key file"
+    )
     parser.add_argument(
         "--allow-ips",
         default=None,
