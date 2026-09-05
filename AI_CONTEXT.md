@@ -102,6 +102,13 @@ matplotlib-to-originlab/
 - Linux CI: respx モック（Origin 不要）でリモート・サーバー HTTP 層をテスト
 - Windows self-hosted: `test-origin` label 付き PR または main push 時のみ実行
 
+### Local Dev Setup (uv workspace)
+- ルートの `uv sync` はルートの `[dependency-groups] dev`（pytest/ruff/mypy 等）のみを入れる。
+  `remote/`・`server/` 等サブパッケージ固有の dev 依存（`remote` の `matplotlib`・`numpy` など）は
+  各サブパッケージの `pyproject.toml` 側の `dependency-groups` にあり、ルートの `uv sync` だけでは
+  入らない
+- `pytest` 等でサブパッケージの dev 依存が必要な場合は `uv sync --all-packages --all-groups` を使う
+
 ---
 
 ## AI Tool Assignments
