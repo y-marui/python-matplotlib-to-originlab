@@ -239,6 +239,30 @@ repos:
         exclude: '^(core|client|sample|Documentation)/'
 
   # ----------------------------------------------------------------
+  # Shell scripts
+  # (Lints the staged (index) content rather than the working-tree
+  # bytes: on Windows checkouts with core.autocrlf=true, git's clean
+  # filter already normalizes CRLF->LF on `git add`, so the index is
+  # LF even though the working tree shows CRLF. This avoids false
+  # SC1017 hits from the local checkout while still catching real
+  # CRLF committed with core.autocrlf=false.)
+  # ----------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: shellcheck
+        language: python
+        additional_dependencies: ["shellcheck-py==0.11.0.1"]
+        entry: >-
+          bash -c 'status=0; for f in "$@"; do
+          git show ":$f" | shellcheck --severity=warning - 2>&1 | sed "s|^In - |In $f |";
+          [ "${PIPESTATUS[1]}" -eq 0 ] || status=1;
+          done; exit $status' --
+        types: [shell]
+        exclude: '\.zsh$'
+        require_serial: true
+
+  # ----------------------------------------------------------------
   # PowerShell scripts
   # (PSScriptAnalyzer, installed locally on first run. Skipped in CI —
   # see ci.yml's SKIP env — it isn't required to gate merges; it exists
