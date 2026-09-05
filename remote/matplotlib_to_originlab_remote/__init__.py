@@ -310,7 +310,10 @@ def run(
         output_path = f"{graph_name}.{fmt}"
 
     Path(output_path).write_bytes(resp.content)
-    return str(Path(output_path).resolve())
+    # .absolute() (not .resolve()): the docstring only promises an absolute
+    # path, and resolving symlinks would silently rewrite a caller-supplied
+    # absolute path (e.g. macOS's /var -> /private/var tmpdir symlink).
+    return str(Path(output_path).absolute())
 
 
 def cancel(
