@@ -346,7 +346,9 @@ def _worker_loop() -> None:
 def start_worker() -> threading.Thread:
     global _worker_thread
     _stop_event.clear()
-    _worker_thread = threading.Thread(target=_worker_loop, daemon=True, name="origin-worker")
+    _worker_thread = threading.Thread(
+        target=_worker_loop, daemon=True, name="origin-worker"
+    )
     _worker_thread.start()
     return _worker_thread
 
