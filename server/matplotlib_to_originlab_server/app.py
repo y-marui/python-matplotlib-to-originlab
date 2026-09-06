@@ -22,7 +22,7 @@ import ipaddress
 import json
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 try:
@@ -133,7 +133,7 @@ async def submit_job(request: Request):
         )
 
     job_id = str(uuid.uuid4())
-    created_at = datetime.now(timezone.utc).isoformat()
+    created_at = datetime.now(UTC).isoformat()
 
     # Persist input to disk for reproducibility / debugging
     input_dir = JOBS_DIR / job_id / "input"
@@ -192,7 +192,7 @@ async def cancel_job(job_id: str):
         db.update_job(
             job_id,
             status="cancelled",
-            finished_at=datetime.now(timezone.utc).isoformat(),
+            finished_at=datetime.now(UTC).isoformat(),
             error="Cancelled by user",
         )
         worker.force_restart_origin()

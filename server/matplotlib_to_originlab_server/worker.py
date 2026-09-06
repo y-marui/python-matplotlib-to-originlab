@@ -8,7 +8,7 @@ import os
 import subprocess
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from . import db
@@ -32,7 +32,7 @@ _worker_thread: threading.Thread | None = None
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _job_dir(job_id: str) -> Path:

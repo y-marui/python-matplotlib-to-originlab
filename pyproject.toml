@@ -51,7 +51,7 @@ addopts = ["--import-mode=importlib"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 # Lint only the cross-platform packages; core/ is Windows-only.
 exclude = ["core", "client", "sample", "Documentation", "tests"]
 # docs/dev-charter/ is a git subtree we cannot edit directly (see
