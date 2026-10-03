@@ -18,7 +18,7 @@ dependencies = [
 [project.optional-dependencies]
 # Web framework (planned — see ROADMAP.md)
 server = [
-    "fastapi>=0.135.3,<0.142.0",
+    "fastapi>=0.135.3,<0.143.0",
     "uvicorn>=0.44,<0.54",
 ]
 
@@ -31,7 +31,7 @@ dev = [
     "httpx>=0.28.1,<0.29",
     # fastapi/uvicorn are runtime-optional ([project.optional-dependencies] server),
     # but the HTTP-layer test suite needs fastapi/starlette to run (not just skip).
-    "fastapi>=0.135.3,<0.142.0",
+    "fastapi>=0.135.3,<0.143.0",
     "starlette",
 ]
 
