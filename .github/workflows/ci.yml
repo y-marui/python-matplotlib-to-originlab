@@ -16,7 +16,7 @@ jobs:
   changes:
     name: Detect changes
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     permissions:
       contents: read
       pull-requests: read
@@ -54,8 +54,7 @@ jobs:
   security:
     name: Security scan (pre-commit)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -78,8 +77,7 @@ jobs:
     name: Lint & type check
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -122,7 +120,7 @@ jobs:
     name: Tests (Linux / Origin-free, Python ${{ matrix.python-version }})
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]  # EOLまで6ヶ月以上あるバージョン
@@ -166,8 +164,7 @@ jobs:
     name: Build
     needs: [changes, security, lint, test]
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -192,7 +189,7 @@ jobs:
     name: CI
     needs: [changes, security, lint, test, build]
     if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER && !github.event.pull_request.head.repo.fork && vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Verify required jobs succeeded
         run: |
