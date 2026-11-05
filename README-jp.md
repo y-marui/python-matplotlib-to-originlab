@@ -27,7 +27,7 @@ matplotlib-to-originlab/
 
 ---
 
-## Quick start
+## Installation
 
 クライアントをインストール（ほとんどのユーザーはこれだけでよい）:
 
@@ -35,7 +35,7 @@ matplotlib-to-originlab/
 pip install matplotlib-to-originlab
 ```
 
-使い方:
+## Usage
 
 ```python
 import matplotlib.pyplot as plt

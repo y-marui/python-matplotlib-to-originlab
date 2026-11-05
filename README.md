@@ -28,7 +28,7 @@ See each subdirectory for its own README and `pyproject.toml`.
 
 ---
 
-## Quick start
+## Installation
 
 Install the client (the only package most users need):
 
@@ -36,7 +36,7 @@ Install the client (the only package most users need):
 pip install matplotlib-to-originlab
 ```
 
-Then:
+## Usage
 
 ```python
 import matplotlib.pyplot as plt
